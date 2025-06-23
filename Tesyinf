@@ -3,76 +3,79 @@ local SaveManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/d
 local InterfaceManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/InterfaceManager.lua"))()
 
 local Window = Fluent:CreateWindow({
-    Title = "Seed Buyer - Fluent " .. Fluent.Version,
+    Title = "🌱 Seed Buyer",
     SubTitle = "by Zoro",
     TabWidth = 160,
-    Size = UDim2.fromOffset(580, 460),
+    Size = UDim2.fromOffset(560, 420),
     Acrylic = true,
     Theme = "Dark",
     MinimizeKey = Enum.KeyCode.LeftControl
 })
 
 local Tabs = {
-    Main = Window:AddTab({ Title = "Main", Icon = "leaf" }),
+    Main = Window:AddTab({ Title = "Main", Icon = "shopping-cart" }),
     Settings = Window:AddTab({ Title = "Settings", Icon = "settings" })
 }
 
 local Options = Fluent.Options
 
--- Seed List
+-- Your exact seed list
 local seedList = {
-    "Carrot", "Strawberry", "Blueberry", "Tomato", "Cauliflower",
-    "Avocado", "Banana", "Green Apple", "Bell Pepper", "Kiwi",
-    "Prickly Pear", "Loquat", "Feijoa", "Sugar Apple"
+    "Carrot",
+    "Strawberry",
+    "Blueberry",
+    "Tomato",
+    "Cauliflower",
+    "Avocado",
+    "Banana",
+    "Green Apple",
+    "Bell Pepper",
+    "Kiwi",
+    "Prickly Pear",
+    "Loquat",
+    "Feijoa",
+    "Sugar Apple"
 }
 
--- Multi-select Dropdown for seeds
+-- Multi-select dropdown
 local SelectedSeeds = Tabs.Main:AddDropdown("SelectedSeeds", {
-    Title = "🌿 Select Seeds to Auto-Buy",
-    Description = "You can select multiple seeds",
-    Values = seedList,
+    Title = "Select Seeds to Auto Buy",
     Multi = true,
+    Values = seedList,
     Default = {}
 })
 
--- Auto Buy Toggle
+-- Toggle
 local AutoBuy = Tabs.Main:AddToggle("AutoBuyToggle", {
-    Title = "⚡ Auto-Buy Enabled",
+    Title = "Auto Buy",
     Default = false
 })
 
--- Auto-buy loop
+-- Loop when toggle is enabled
 AutoBuy:OnChanged(function(state)
     if state then
         task.spawn(function()
             while AutoBuy.Value do
-                for seed, isSelected in pairs(SelectedSeeds.Value) do
+                for seedName, isSelected in pairs(SelectedSeeds.Value) do
                     if isSelected then
-                        local args = { seed }
-                        local ok, err = pcall(function()
+                        local args = {
+                            seedName -- Your exact format
+                        }
+                        pcall(function()
                             game:GetService("ReplicatedStorage")
                                 :WaitForChild("GameEvents")
                                 :WaitForChild("BuySeedStock")
                                 :FireServer(unpack(args))
                         end)
-                        if not ok then
-                            warn("Failed to buy seed:", seed, err)
-                        end
                     end
                 end
-                task.wait(0.05) -- Ultra fast loop
+                task.wait(0.7)
             end
         end)
     end
 end)
 
--- Optional: live selected seed display
-Tabs.Main:AddParagraph({
-    Title = "Selected Seeds",
-    Content = "Shown in dropdown above."
-})
-
--- Addon Setup
+-- Save / Load system
 SaveManager:SetLibrary(Fluent)
 InterfaceManager:SetLibrary(Fluent)
 
@@ -84,11 +87,9 @@ SaveManager:SetFolder("FluentSeedBuyer/Configs")
 InterfaceManager:BuildInterfaceSection(Tabs.Settings)
 SaveManager:BuildConfigSection(Tabs.Settings)
 
-Window:SelectTab(1)
-
 Fluent:Notify({
-    Title = "Loaded",
-    Content = "Auto Seed Buyer is ready.",
+    Title = "✅ Loaded!",
+    Content = "Seed auto buyer ready.",
     Duration = 6
 })
 
