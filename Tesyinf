@@ -3,7 +3,7 @@ local SaveManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/d
 local InterfaceManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/InterfaceManager.lua"))()
 
 local Window = Fluent:CreateWindow({
-    Title = "🌱 Seed Buyer",
+    Title = "🌾 Auto Shop",
     SubTitle = "by Zoro",
     TabWidth = 160,
     Size = UDim2.fromOffset(560, 420),
@@ -13,54 +13,60 @@ local Window = Fluent:CreateWindow({
 })
 
 local Tabs = {
-    Main = Window:AddTab({ Title = "Main", Icon = "shopping-cart" }),
+    Shop = Window:AddTab({ Title = "Shop", Icon = "shopping-cart" }),
     Settings = Window:AddTab({ Title = "Settings", Icon = "settings" })
 }
 
 local Options = Fluent.Options
 
--- Your exact seed list
+-- 🌱 Seeds
 local seedList = {
-    "Carrot",
-    "Strawberry",
-    "Blueberry",
-    "Tomato",
-    "Cauliflower",
-    "Avocado",
-    "Banana",
-    "Green Apple",
-    "Bell Pepper",
-    "Kiwi",
-    "Prickly Pear",
-    "Loquat",
-    "Feijoa",
-    "Sugar Apple"
+    "Carrot", "Strawberry", "Blueberry", "Tomato", "Cauliflower",
+    "Avocado", "Banana", "Green Apple", "Bell Pepper", "Kiwi",
+    "Prickly Pear", "Loquat", "Feijoa", "Sugar Apple", "Pineapple"
 }
 
--- Multi-select dropdown
-local SelectedSeeds = Tabs.Main:AddDropdown("SelectedSeeds", {
-    Title = "Select Seeds to Auto Buy",
+-- 🛠️ Tools
+local toolList = {
+    "Harvest Tool", "Watering Can", "Trowel", "Recall Wrench",
+    "Basic Sprinkler", "Advanced Sprinkler", "Godly Sprinkler", "Master Sprinkler",
+    "Cleaning Spray", "Favorite Tool", "Friendship Pot", "Tanning Mirror"
+}
+
+-- Dropdowns
+local SelectedSeeds = Tabs.Shop:AddDropdown("SelectedSeeds", {
+    Title = "🌱 Select Seeds to Auto Buy",
     Multi = true,
     Values = seedList,
     Default = {}
 })
 
--- Toggle
-local AutoBuy = Tabs.Main:AddToggle("AutoBuyToggle", {
-    Title = "Auto Buy",
+local SelectedTools = Tabs.Shop:AddDropdown("SelectedTools", {
+    Title = "🛠️ Select Tools to Auto Buy",
+    Multi = true,
+    Values = toolList,
+    Default = {}
+})
+
+-- Toggles
+local AutoBuySeeds = Tabs.Shop:AddToggle("AutoBuySeeds", {
+    Title = "🌾 Auto Buy Seeds",
     Default = false
 })
 
--- Loop when toggle is enabled
-AutoBuy:OnChanged(function(state)
+local AutoBuyTools = Tabs.Shop:AddToggle("AutoBuyTools", {
+    Title = "🔧 Auto Buy Tools",
+    Default = false
+})
+
+-- 🌾 Seeds loop
+AutoBuySeeds:OnChanged(function(state)
     if state then
         task.spawn(function()
-            while AutoBuy.Value do
+            while AutoBuySeeds.Value do
                 for seedName, isSelected in pairs(SelectedSeeds.Value) do
                     if isSelected then
-                        local args = {
-                            seedName -- Your exact format
-                        }
+                        local args = { seedName }
                         pcall(function()
                             game:GetService("ReplicatedStorage")
                                 :WaitForChild("GameEvents")
@@ -75,7 +81,29 @@ AutoBuy:OnChanged(function(state)
     end
 end)
 
--- Save / Load system
+-- 🛠️ Tools loop
+AutoBuyTools:OnChanged(function(state)
+    if state then
+        task.spawn(function()
+            while AutoBuyTools.Value do
+                for toolName, isSelected in pairs(SelectedTools.Value) do
+                    if isSelected then
+                        local args = { toolName }
+                        pcall(function()
+                            game:GetService("ReplicatedStorage")
+                                :WaitForChild("GameEvents")
+                                :WaitForChild("BuyGearStock")
+                                :FireServer(unpack(args))
+                        end)
+                    end
+                end
+                task.wait(0.7)
+            end
+        end)
+    end
+end)
+
+-- Save System
 SaveManager:SetLibrary(Fluent)
 InterfaceManager:SetLibrary(Fluent)
 
@@ -89,7 +117,7 @@ SaveManager:BuildConfigSection(Tabs.Settings)
 
 Fluent:Notify({
     Title = "✅ Loaded!",
-    Content = "Seed auto buyer ready.",
+    Content = "Auto Buyer Ready (Seeds + Tools)",
     Duration = 6
 })
 
