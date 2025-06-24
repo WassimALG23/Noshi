@@ -397,20 +397,112 @@ bbf()
 end
 })
 
+sell:AddSection("pets")
+
+-- List of all pet names
+local petNames = {
+    "Bear Bee", "Bee", "Black Bunny", "Blood Hedgehog", "Blood Kiwi", "Blood Owl",
+    "Brown Mouse", "Bunny", "Butterfly", "Capybara", "Cat", "Caterpillar", "Chicken",
+    "Chicken Zombie", "Cooked Owl", "Cow", "Crab", "Deer", "Disco Bee", "Dog", "Doge",
+    "Dragonfly", "Echo Frog", "Firefly", "Flamingo", "Frog", "Giant Ant", "Golden Bee",
+    "Golden Lab", "Grey Mouse", "Hedgehog", "Honey Bee", "Kiwi", "Mimic Octopus",
+    "Mole", "Monkey", "Moon Cat", "Moth", "Night Owl", "Orange Tabby", "Orangutan",
+    "Ostrich", "Owl", "Pack Bee", "Panda", "Peacock", "Petal Bee", "Pig", "Polar Bear",
+    "Praying Mantis", "Queen Bee", "Raccoon", "Red Dragon", "Red Fox",
+    "Red Giant Ant", "Rooster", "Scarlet Macaw", "Sea Otter", "Sea Turtle", "Seagull",
+    "Seal", "Silver Monkey", "Snail", "Spotted Deer", "Squirrel", "Starfish",
+    "Tarantula Hawk", "Toucan", "Turtle", "Wasp"
+}
+
+-- Store selected pet names
+local selectedPetsToSell = {}
+
+-- Dropdown to select pets
+sell:AddDropdown("PetsToSellDropdown", {
+    Title = "Select pets to auto-sell",
+    Description = "select pets",
+    Values = petNames,
+    Multi = true,
+    Default = {}
+}):OnChanged(function(selection)
+    selectedPetsToSell = {}
+    for name, isSelected in pairs(selection) do
+        if isSelected then
+            table.insert(selectedPetsToSell, name)
+        end
+    end
+end)
+
+-- Toggle for auto selling
+local autoSellEnabled = false
+
+sell:AddToggle("EnableAutoSellPets", {
+    Title = "Auto Sell Selected Pets",
+    Description = "Scans and sells selected pets (5s delay)",
+    Default = false,
+    Callback = function(state)
+        autoSellEnabled = state
+        if state then
+            task.spawn(function()
+                while autoSellEnabled do
+                    local player = game:GetService("Players").LocalPlayer
+                    local containers = { player.Backpack, player.Character }
+
+                    for _, container in ipairs(containers) do
+                        for _, tool in ipairs(container:GetChildren()) do
+                            if tool:IsA("Tool") then
+                                for _, petName in ipairs(selectedPetsToSell) do
+                                    if tool.Name:lower():find(petName:lower(), 1, true) then
+                                        local humanoid = player.Character and player.Character:FindFirstChildOfClass("Humanoid")
+                                        if humanoid then
+                                            humanoid:EquipTool(tool)
+                                            task.wait(0.2)
+                                            game:GetService("ReplicatedStorage"):WaitForChild("GameEvents"):WaitForChild("SellPet_RE"):FireServer()
+                                            print("Sold:", tool.Name)
+                                            task.wait(5)
+                                        end
+                                    end
+                                end
+                            end
+                        end
+                    end
+
+                    task.wait(1) -- wait before checking again
+                end
+            end)
+        end
+    end
+})
+
+
+sell:AddButton({
+    Title = "Sell Pet",
+    Description = "Sells the pet you're holding",
+    Callback = function()
+        game:GetService("ReplicatedStorage"):WaitForChild("GameEvents"):WaitForChild("SellPet_RE"):FireServer()
+    end
+})
+
 --
 
-player:AddSlider("WalkSpeedSlider", {
+player:AddInput("WalkSpeedInput", {
     Title = "WalkSpeed",
-    Description = "Ajuste a velocidade de caminhada",
-    Min = 20,
-    Max = 150,
-    Default = 20,
-    Rounding = 1,
-    Callback = function(value)
-        if game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChild("Humanoid") then
-            game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = value
+    Description = "Enter your desired walk speed",
+    Placeholder = "Example: 100",
+    Default = "20",
+    Numeric = true,
+    Callback = function(input)
+        local value = tonumber(input)
+        if value and game.Players.LocalPlayer.Character then
+            local humanoid = game.Players.LocalPlayer.Character:FindFirstChild("Humanoid")
+            if humanoid then
+                humanoid.WalkSpeed = value
+                print("✔️ WalkSpeed set to:", value)
+            end
+        else
+            warn("❌ Please enter a valid number")
         end
-     end      
+    end
 })
 
 --
@@ -431,7 +523,7 @@ end
 
 local pDropdown = pet:AddDropdown("Dropdown", {
     Title = "choose the pet to auto feed\n",
-    Description = "auto se explica\n",
+    Description = "auto feed pet\n",
     Values = {},
     Multi = false,
     Default = nil,
