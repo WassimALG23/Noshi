@@ -124,7 +124,7 @@ InterfaceManager:SetFolder("GrowAGarden")
 InterfaceManager:BuildInterfaceSection(config)
 
 -- Local Variáveis --
-local fruitList = {
+local fruitNames = {
     -- Basic to Prismatic crops
     "Carrot","Strawberry","Chocolate Carrot","Blueberry","Wild Carrot","Rose",
     "Tomato","Cauliflower","Pear","Raspberry","Watermelon","Pumpkin",
@@ -271,6 +271,7 @@ function ufav()
 end
 
 -- Local Script --
+    
 local pickup_delay = 0.05
 local pickup_radius = 10000
 
@@ -302,16 +303,16 @@ end
 local function collectFruits(filterFn, flagRef)
     task.spawn(function()
         while flagRef.enabled do
-            if stopOnFull and isInventoryFull() then task.wait(1) continue end
-
             for _, plant in next, farm.Important.Plants_Physical:GetChildren() do
-                if typeof(filterFn) == "function" and not filterFn(plant) then continue end
-
+                -- Pick up plant itself
                 byte_net_reliable:FireServer(buffer, { plant })
                 task.wait(pickup_delay)
 
-                if plant:FindFirstChild("Fruits", true) then
-                    for _, fruit in next, plant.Fruits:GetChildren() do
+                -- Check fruit
+                local fruits = plant:FindFirstChild("Fruits", true)
+                if fruits then
+                    for _, fruit in next, fruits:GetChildren() do
+                        if stopOnFull and isInventoryFull() then break end
                         if not filterFn or filterFn(fruit) then
                             byte_net_reliable:FireServer(buffer, { fruit })
                             task.wait(pickup_delay)
@@ -319,7 +320,6 @@ local function collectFruits(filterFn, flagRef)
                     end
                 end
             end
-
             task.wait(0.2)
         end
     end)
@@ -368,20 +368,16 @@ pet:AddToggle("collectMutations", {
     Callback = function(state)
         mutFlag.enabled = state
         if state then
-            collectFruits(function(obj)
-                return obj:GetAttribute("Mutation") and table.find(selectedMutations, obj:GetAttribute("Mutation"))
+            collectFruits(function(fruit)
+                local mut = fruit:GetAttribute("Mutation")
+                return mut and table.find(selectedMutations, mut)
             end, mutFlag)
         end
     end
 })
 
 -- 3. Collect by Fruit Name
-local fruitNames = {
-    "Carrot","Strawberry","Blueberry","Tomato","Cauliflower","Watermelon","Green Apple","Avocado",
-    "Banana","Pineapple","Kiwi","Bell Pepper","Prickly Pear","Loquat","Feijoa","Sugar Apple",
-    "Plum","Blackberry","Durian","Mango","Dragon Fruit","Pear","Rambutan","Mangosteen",
-    "Coconut","Fig","Passion Fruit","Guava","Apple","Lime","Lemon","Orange","Peach","Cherry"
-}
+
 local selectedFruits = {}
 
 pet:AddDropdown("fruitSelect", {
@@ -407,13 +403,13 @@ pet:AddToggle("collectSpecificFruits", {
     Callback = function(state)
         fruitFlag.enabled = state
         if state then
-            collectFruits(function(obj)
-                return obj:GetAttribute("Name") and table.find(selectedFruits, obj:GetAttribute("Name"))
+            collectFruits(function(fruit)
+                local name = fruit:GetAttribute("Name")
+                return name and table.find(selectedFruits, name)
             end, fruitFlag)
         end
     end
 })
-
     
 
 
