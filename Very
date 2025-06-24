@@ -244,80 +244,97 @@ end
 
 -- Local Script --
 
-local section = main:AddSection("collect plants")
+        -- Section: Collect Plants local section = main:AddSection("Collect Plants")
 
-local autoCollectAllFruitsEnabled = false
-local autoCollectAllFruitsThread
+-- Toggle: Stop if Backpack is Full local stopOnFull = false main:AddToggle("stopOnFullToggle", { Title = "Stop if Backpack is Full", Description = "Prevents collecting fruits if your backpack is full", Default = false, Callback = function(state) stopOnFull = state end })
 
+local function isInventoryFull() local stats = player:FindFirstChild("PlayerGui"):FindFirstChild("HUD") and player.PlayerGui.HUD:FindFirstChild("Stats") if stats then local capacity = tonumber(stats:FindFirstChild("CapacityLabel") and stats.CapacityLabel.Text:match("%d+")) local current = tonumber(stats:FindFirstChild("FruitLabel") and stats.FruitLabel.Text:match("%d+")) return current and capacity and current >= capacity end return false end
 
-    -- (your auto collect logic)
-local stopOnFull = false
+-- Toggle: Auto Collect All Fruits local autoCollectAllFruitsEnabled = false local autoCollectAllFruitsThread main:AddToggle("autoCollectAllFruits", { Title = "Auto Collect Fruits", Description = "Collects all fruits automatically", Default = false, Callback = function(state) autoCollectAllFruitsEnabled = state
 
-main:AddToggle("stopOnFullToggle", {
-    Title = "Stop if Backpack is Full",
-    Description = "Prevents collecting fruits if your backpack is full",
-    Default = false,
-    Callback = function(state)
-        stopOnFull = state
+if state then
+        autoCollectAllFruitsThread = task.spawn(function()
+            local pickup_radius = 10000
+            local farm_model
+            for _, farm in ipairs(workspace.Farm:GetChildren()) do
+                local data = farm:FindFirstChild("Important") and farm.Important:FindFirstChild("Data")
+                if data and data:FindFirstChild("Owner") and data.Owner.Value == player.Name then
+                    farm_model = farm
+                    break
+                end
+            end
+
+            while autoCollectAllFruitsEnabled and farm_model and task.wait() do
+                if stopOnFull and isInventoryFull() then task.wait(1) continue end
+
+                local plants_folder = farm_model.Important:FindFirstChild("Plants_Physical")
+                if plants_folder and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+                    local playerPosition = player.Character.HumanoidRootPart.Position
+                    for _, plant_model in ipairs(plants_folder:GetChildren()) do
+                        local fruits = plant_model:FindFirstChild("Fruits")
+                        if fruits then
+                            for _, fruit_model in ipairs(fruits:GetChildren()) do
+                                for _, part in ipairs(fruit_model:GetDescendants()) do
+                                    if part:IsA("BasePart") then
+                                        local prompt = part:FindFirstChildOfClass("ProximityPrompt")
+                                        if prompt and (part.Position - playerPosition).Magnitude <= pickup_radius then
+                                            fireproximityprompt(prompt)
+                                            task.wait(0.05)
+                                        end
+                                    end
+                                end
+                            end
+                        end
+                    end
+                end
+            end
+        end)
+    elseif autoCollectAllFruitsThread then
+        task.cancel(autoCollectAllFruitsThread)
+        autoCollectAllFruitsThread = nil
     end
-})
-local function isInventoryFull()
-    local stats = player:FindFirstChild("PlayerGui"):FindFirstChild("HUD") and player.PlayerGui.HUD:FindFirstChild("Stats")
-    if stats then
-        local capacity = tonumber(stats:FindFirstChild("CapacityLabel") and stats.CapacityLabel.Text:match("%d+"))
-        local current = tonumber(stats:FindFirstChild("FruitLabel") and stats.FruitLabel.Text:match("%d+"))
-        return current and capacity and current >= capacity
-    end
-    return false
 end
 
+})
 
-main:AddToggle("autoCollectAllFruits", {
-    Title = "Auto Collect Fruits",
-    Description = "Collects all fruits automatically",
-    Default = false,
-    Callback = function(state)
-        autoCollectAllFruitsEnabled = state
-        local pickup_radius = 10000
+-- Dropdown: Select Mutations local mutationNames = { "Ripe","Gold","Rainbow","Wet","Windstruck","Moonlit","Chilled","Bloodlit","Twisted","Frozen", "Shocked","Celestial","Choc","Pollinated","Burnt","Verdant","HoneyGlazed","Plasma","Heavenly", "Paradisal","Cooked","Zombified","Molten","Sundried","Alienlike","Galactic","Disco","Voidtouched","Dawnbound" } local selectedMutations = {} section:AddDropdown("MutationsDropdown", { Title = "Select Mutations to Collect", Description = "Only collects fruits with these mutations", Values = mutationNames, Multi = true, Default = {} }):OnChanged(function(selection) selectedMutations = {} for name, picked in pairs(selection) do if picked then table.insert(selectedMutations, name) end end end)
 
-while autoCollectAllFruitsEnabled do
-    if stopOnFull and isInventoryFull() then
-        task.wait(1)
-        continue
-    end
-        if state then
-            autoCollectAllFruitsThread = task.spawn(function()
+-- Toggle: Auto Collect Mutated Fruits local autoCollectMutationsEnabled = false local autoCollectMutationThread section:AddToggle("autoCollectMutations", { Title = "Auto Collect Mutated Fruits", Description = "Automatically picks only fruits with selected mutations", Default = false, Callback = function(state) autoCollectMutationsEnabled = state
+
+if state then
+        autoCollectMutationThread = task.spawn(function()
+            local pickupRadius = 10000
+            while autoCollectMutationsEnabled do
+                if stopOnFull and isInventoryFull() then task.wait(1) continue end
+
                 local farm_model
                 for _, farm in ipairs(workspace.Farm:GetChildren()) do
-                    local data = farm:FindFirstChild("Important") and farm.Important:FindFirstChild("Data")
-                    if data and data:FindFirstChild("Owner") and data.Owner.Value == player.Name then
+                    local data = farm.Important and farm.Important:FindFirstChild("Data")
+                    if data and data.Owner and data.Owner.Value == player.Name then
                         farm_model = farm
                         break
                     end
                 end
+                if not farm_model then task.wait(1) continue end
 
-                while autoCollectAllFruitsEnabled and farm_model and task.wait() do
-                    local plants_folder = farm_model.Important:FindFirstChild("Plants_Physical")
-                    if plants_folder and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
-                        local playerPosition = player.Character.HumanoidRootPart.Position
+                local human = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+                if not human then task.wait(1) continue end
+                local playerPos = human.Position
 
-                        for _, plant_model in ipairs(plants_folder:GetChildren()) do
-                            if plant_model:IsA("Model") then
-                                local fruits = plant_model:FindFirstChild("Fruits")
-                                if fruits then
-                                    for _, fruit_model in ipairs(fruits:GetChildren()) do
-                                        for _, part in ipairs(fruit_model:GetDescendants()) do
-                                            if part:IsA("BasePart") then
-                                                local prompt = part:FindFirstChildOfClass("ProximityPrompt")
-                                                if prompt then
-                                                    local fruitPosition = part.Position
-                                                    local distance = (fruitPosition - playerPosition).Magnitude
-
-                                                    if distance <= pickup_radius then
-                                                        fireproximityprompt(prompt)
-                                                        task.wait(0.05)
-                                                    end
-                                                end
+                local plants = farm_model.Important:FindFirstChild("Plants_Physical")
+                if plants then
+                    for _, plant in ipairs(plants:GetChildren()) do
+                        local fruits = plant:FindFirstChild("Fruits")
+                        if fruits then
+                            for _, fruit in ipairs(fruits:GetChildren()) do
+                                local mut = fruit:GetAttribute("Mutation")
+                                if mut and table.find(selectedMutations, mut) then
+                                    for _, part in ipairs(fruit:GetDescendants()) do
+                                        if part:IsA("BasePart") then
+                                            local prompt = part:FindFirstChildOfClass("ProximityPrompt")
+                                            if prompt and (part.Position - playerPos).Magnitude <= pickupRadius then
+                                                fireproximityprompt(prompt)
+                                                task.wait(0.05)
                                             end
                                         end
                                     end
@@ -326,97 +343,55 @@ while autoCollectAllFruitsEnabled do
                         end
                     end
                 end
-            end)
-        else
-            if autoCollectAllFruitsThread then
-                task.cancel(autoCollectAllFruitsThread)
-                autoCollectAllFruitsThread = nil
+                task.wait(0.2)
             end
-        end
+        end)
+    elseif autoCollectMutationThread then
+        task.cancel(autoCollectMutationThread)
+        autoCollectMutationThread = nil
     end
+end
+
 })
 
--- ✅ Full mutations list from wiki 1
-local mutationNames = {
-    "Ripe","Gold","Rainbow","Wet","Windstruck","Moonlit","Chilled","Bloodlit","Twisted","Frozen",
-    "Shocked","Celestial","Choc","Pollinated","Burnt","Verdant","HoneyGlazed","Plasma","Heavenly",
-    "Paradisal","Cooked","Zombified","Molten","Sundried","Alienlike","Galactic","Disco","Voidtouched","Dawnbound"
-}
+-- Dropdown: Select Fruits (from wiki crop list) local fruitList = { "Carrot","Strawberry","Blueberry","Tomato","Cauliflower","Watermelon","Green Apple","Avocado", "Banana","Pineapple","Kiwi","Bell Pepper","Prickly Pear","Loquat","Feijoa","Sugar Apple" } local selectedFruits = {} section:AddDropdown("FruitTypeDropdown", { Title = "Select Fruits to Collect", Description = "Only collects these specific fruit types", Values = fruitList, Multi = true, Default = {} }):OnChanged(function(selection) selectedFruits = {} for name, picked in pairs(selection) do if picked then table.insert(selectedFruits, name) end end end)
 
--- Store user-selected mutations
-local selectedMutations = {}
+-- Toggle: Auto Collect Selected Fruits local autoCollectSpecificEnabled = false local autoCollectSpecificThread section:AddToggle("autoCollectSpecificFruits", { Title = "Auto Collect Selected Fruits", Description = "Only collects fruits matching selected names", Default = false, Callback = function(state) autoCollectSpecificEnabled = state
 
--- Create a section and dropdown in your UI
-local section = main:AddSection("Mutation Collector")
+if state then
+        autoCollectSpecificThread = task.spawn(function()
+            local pickupRadius = 10000
+            while autoCollectSpecificEnabled do
+                if stopOnFull and isInventoryFull() then task.wait(1) continue end
 
-section:AddDropdown("MutationsDropdown", {
-    Title = "Select Mutations to Collect",
-    Description = "Only collects fruits with these mutations",
-    Values = mutationNames,
-    Multi = true,
-    Default = {}
-}):OnChanged(function(selection)
-    selectedMutations = {}
-    for name, picked in pairs(selection) do
-        if picked then table.insert(selectedMutations, name) end
-    end
-end)
-
--- Auto-collect toggle
-local autoCollectMutationsEnabled = false
-local autoCollectThread = nil
-
-
-
-    -- (your auto collect logic)
-section:AddToggle("autoCollectMutations", {
-    Title = "Auto Collect Mutated Fruits",
-    Description = "Automatically picks only fruits with selected mutations",
-    Default = false,
-    Callback = function(state)
-        autoCollectMutationsEnabled = state
-while autoCollectMutationsEnabled do
-    if stopOnFull and isInventoryFull() then
-        task.wait(1)
-        continue
-    end
-
-        if state then
-            autoCollectThread = task.spawn(function()
-                local pickupRadius = 10000
-                while autoCollectMutationsEnabled do
-                    local farm_model
-                    for _, farm in ipairs(workspace.Farm:GetChildren()) do
-                        local data = farm.Important and farm.Important:FindFirstChild("Data")
-                        if data and data.Owner and data.Owner.Value == player.Name then
-                            farm_model = farm
-                            break
-                        end
+                local farm_model
+                for _, farm in ipairs(workspace.Farm:GetChildren()) do
+                    local data = farm.Important and farm.Important:FindFirstChild("Data")
+                    if data and data.Owner and data.Owner.Value == player.Name then
+                        farm_model = farm
+                        break
                     end
-                    if not farm_model then task.wait(1); continue end
+                end
+                if not farm_model then task.wait(1) continue end
 
-                    local human = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
-                    if not human then task.wait(1); continue end
-                    local playerPos = human.Position
+                local human = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+                if not human then task.wait(1) continue end
+                local playerPos = human.Position
 
-                    local plants = farm_model.Important:FindFirstChild("Plants_Physical")
-                    if plants then
-                        for _, plant in ipairs(plants:GetChildren()) do
-                            local fruits = plant:FindFirstChild("Fruits")
-                            if fruits then
-                                for _, fruit in ipairs(fruits:GetChildren()) do
-                                    local mut = fruit:GetAttribute("Mutation")
-                                    if mut and table.find(selectedMutations, mut) then
-                                        for _, part in ipairs(fruit:GetDescendants()) do
-                                            if part:IsA("BasePart") then
-                                                local prompt = part:FindFirstChildOfClass("ProximityPrompt")
-                                                if prompt then
-                                                    local dist = (part.Position - playerPos).Magnitude
-                                                    if dist <= pickupRadius then
-                                                        fireproximityprompt(prompt)
-                                                        task.wait(0.05)
-                                                    end
-                                                end
+                local plants = farm_model.Important:FindFirstChild("Plants_Physical")
+                if plants then
+                    for _, plant in ipairs(plants:GetChildren()) do
+                        local fruits = plant:FindFirstChild("Fruits")
+                        if fruits then
+                            for _, fruit in ipairs(fruits:GetChildren()) do
+                                local name = fruit:GetAttribute("Name")
+                                if name and table.find(selectedFruits, name) then
+                                    for _, part in ipairs(fruit:GetDescendants()) do
+                                        if part:IsA("BasePart") then
+                                            local prompt = part:FindFirstChildOfClass("ProximityPrompt")
+                                            if prompt and (part.Position - playerPos).Magnitude <= pickupRadius then
+                                                fireproximityprompt(prompt)
+                                                task.wait(0.05)
                                             end
                                         end
                                     end
@@ -424,32 +399,17 @@ while autoCollectMutationsEnabled do
                             end
                         end
                     end
-
-                    task.wait(0.2)
                 end
-            end)
-        else
-            if autoCollectThread then
-                task.cancel(autoCollectThread)
-                autoCollectThread = nil
+                task.wait(0.2)
             end
-        end
+        end)
+    elseif autoCollectSpecificThread then
+        task.cancel(autoCollectSpecificThread)
+        autoCollectSpecificThread = nil
     end
+end
+
 })
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
