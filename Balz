@@ -70,7 +70,7 @@ local Window = Fluent:CreateWindow({
 
 local main = Window:AddTab({
     Title = "main",
-    Icon = "house "
+    Icon = "warehouse"
 })
 
 local shop = Window:AddTab({
@@ -88,16 +88,21 @@ local sell = Window:AddTab({
     Icon = "banknote"
 })
 
-local player = Window:AddTab({
-        Title = "Player",
-        Icon = "user"
-    })
 
 local pet = Window:AddTab({
         Title = "pet",
         Icon = "bone"
     })
 
+local event = Window:AddTab({
+    Title = "Events",
+    Icon = "calendar"
+})
+
+local esp = Window:AddTab({
+        Title = "Esp",
+        Icon = "atom"
+    })
 local ui = Window:AddTab({
         Title = "UIs",
         Icon = "scroll"
@@ -108,10 +113,10 @@ local vuln = Window:AddTab({
         Icon = "list"
     })
 
-local event = Window:AddTab({
-    Title = "Events",
-    Icon = "calendar"
-})
+local player = Window:AddTab({
+        Title = "Player",
+        Icon = "user"
+    })
 
 local config = Window:AddTab({
     Title = "config",
@@ -964,8 +969,11 @@ pcall(function()
 	end
 end)
 
+
+-- esp 
+local espSection = esp:AddSection("Egg and mutations Esp")
 -- ✅ ESP Toggle
-pet:AddToggle("eggEspToggle", {
+esp:AddToggle("eggEspToggle", {
 	Title = "Egg ESP",
 	Default = false,
 	Callback = function(state)
@@ -980,6 +988,93 @@ pet:AddToggle("eggEspToggle", {
 			end
 		end
 	end
+})
+-- Define mutation list
+
+
+-- Selected mutation
+local selectedMutationESP = nil
+
+-- ESP toggle control
+local espEnabled = false
+
+-- Mutation dropdown
+esp:AddDropdown("mutationEspSelect", {
+    Title = "ESP: Mutation Filter",
+    Description = "Only show ESP for fruits with selected mutation",
+    Values = mutationList,
+    Multi = false,
+    Default = nil
+}):OnChanged(function(value)
+    selectedMutationESP = value
+    print("[ESP DEBUG] Selected Mutation for ESP:", selectedMutationESP)
+end)
+
+-- Toggle to activate/deactivate ESP
+esp:AddToggle("mutationEspToggle", {
+    Title = "Enable Fruit Mutation ESP",
+    Description = "Draws ESP for fruits with selected mutation",
+    Default = false,
+    Callback = function(state)
+        espEnabled = state
+        print("[ESP DEBUG] ESP state changed:", state)
+
+        if state then
+            task.spawn(function()
+                while espEnabled do
+                    -- Clean up old ESP
+                    for _, v in pairs(workspace:GetDescendants()) do
+                        if v:IsA("BillboardGui") and v.Name == "MutationESP" then
+                            v:Destroy()
+                        end
+                    end
+
+                    -- Draw ESP for matching fruits
+                    for _, plant in pairs(farm.Important.Plants_Physical:GetChildren()) do
+                        local fruits = plant:FindFirstChild("Fruits")
+                        if fruits then
+                            for _, fruit in pairs(fruits:GetChildren()) do
+                                local mut = fruit:GetAttribute("Mutation")
+                                if mut and mut == selectedMutationESP then
+                                    for _, part in pairs(fruit:GetDescendants()) do
+                                        if part:IsA("BasePart") then
+                                            local gui = Instance.new("BillboardGui")
+                                            gui.Name = "MutationESP"
+                                            gui.Adornee = part
+                                            gui.Size = UDim2.new(0, 100, 0, 30)
+                                            gui.AlwaysOnTop = true
+                                            gui.StudsOffset = Vector3.new(0, 2, 0)
+
+                                            local label = Instance.new("TextLabel", gui)
+                                            label.Size = UDim2.new(1, 0, 1, 0)
+                                            label.BackgroundTransparency = 1
+                                            label.Text = "[💫 " .. mut .. " 💫]"
+                                            label.TextColor3 = Color3.fromRGB(255, 200, 0)
+                                            label.TextStrokeTransparency = 0.5
+                                            label.TextScaled = true
+                                            label.Font = Enum.Font.GothamBold
+
+                                            gui.Parent = part
+                                        end
+                                    end
+                                end
+                            end
+                        end
+                    end
+
+                    task.wait(1) -- ESP refresh rate
+                end
+
+                -- Clean up when disabled
+                for _, v in pairs(workspace:GetDescendants()) do
+                    if v:IsA("BillboardGui") and v.Name == "MutationESP" then
+                        v:Destroy()
+                    end
+                end
+                print("[ESP DEBUG] ESP stopped and cleaned.")
+            end)
+        end
+    end
 })
 
 -- ✅ Auto Hatch Toggle
