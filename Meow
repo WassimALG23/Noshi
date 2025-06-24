@@ -248,11 +248,7 @@ local section = main:AddSection("collect plants")
 
 local autoCollectAllFruitsEnabled = false
 local autoCollectAllFruitsThread
-while autoCollectAllFruitsEnabled do
-    if stopOnFull and isInventoryFull() then
-        task.wait(1)
-        continue
-    end
+
 
     -- (your auto collect logic)
 local stopOnFull = false
@@ -284,6 +280,11 @@ main:AddToggle("autoCollectAllFruits", {
         autoCollectAllFruitsEnabled = state
         local pickup_radius = 10000
 
+while autoCollectAllFruitsEnabled do
+    if stopOnFull and isInventoryFull() then
+        task.wait(1)
+        continue
+    end
         if state then
             autoCollectAllFruitsThread = task.spawn(function()
                 local farm_model
@@ -365,11 +366,7 @@ end)
 local autoCollectMutationsEnabled = false
 local autoCollectThread = nil
 
-while autoCollectMutationsEnabled do
-    if stopOnFull and isInventoryFull() then
-        task.wait(1)
-        continue
-    end
+
 
     -- (your auto collect logic)
 section:AddToggle("autoCollectMutations", {
@@ -378,6 +375,11 @@ section:AddToggle("autoCollectMutations", {
     Default = false,
     Callback = function(state)
         autoCollectMutationsEnabled = state
+while autoCollectMutationsEnabled do
+    if stopOnFull and isInventoryFull() then
+        task.wait(1)
+        continue
+    end
 
         if state then
             autoCollectThread = task.spawn(function()
