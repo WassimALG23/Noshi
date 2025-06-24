@@ -266,6 +266,14 @@ dropdownSeed:OnChanged(function(Value)
         end
     end
 end)
+shop:AddToggle("", {
+    Title = "Buy all seed",
+    Description = "Buy all shop seed",
+    Default = false,
+    Callback = function()
+        byallseedfc()
+    end
+})
 
 local section = shop:AddSection("Gears")
 
@@ -294,6 +302,15 @@ dropdownGear:OnChanged(function(Value)
         end
     end
 end)
+
+shop:AddToggle("", {
+    Title = "Buy all gear",
+    Description = "Buy all shop gear",
+    Default = false,
+    Callback = function()
+        byallgearfc()
+    end
+})
 
 local section = shop:AddSection("Pets buy")
 
