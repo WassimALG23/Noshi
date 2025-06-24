@@ -70,7 +70,7 @@ local Window = Fluent:CreateWindow({
 
 local main = Window:AddTab({
     Title = "main",
-    Icon = "house"
+    Icon = "house "
 })
 
 local shop = Window:AddTab({
@@ -272,15 +272,15 @@ end
 
 -- Local Script --
     
-    local pickup_delay = 0.05
+    local pickup_delay = 0.1
 local pickup_radius = 10000
 
 -- Section: Collect Plants
-local section = pet:AddSection("Collect Plants")
+local section = main:AddSection("Collect Plants")
 
 -- Toggle: Stop if Backpack is Full
 local stopOnFull = false
-pet:AddToggle("stopOnFullToggle", {
+main:AddToggle("stopOnFullToggle", {
     Title = "Stop if Backpack is Full",
     Description = "Skips collection if backpack is full",
     Default = false,
@@ -346,7 +346,7 @@ end
 
 -- Collect All
 local allFlag = { enabled = false }
-pet:AddToggle("collectAllFruits", {
+main:AddToggle("collectAllFruits", {
     Title = "Auto Collect All Fruits",
     Description = "Collects every fruit",
     Default = false,
@@ -367,7 +367,7 @@ local mutationList = {
 }
 local selectedMutations = {}
 
-pet:AddDropdown("mutationSelect", {
+main:AddDropdown("mutationSelect", {
     Title = "Select Mutations to Collect",
     Description = "Only collects fruits with these mutations",
     Values = mutationList,
@@ -384,7 +384,7 @@ pet:AddDropdown("mutationSelect", {
 end)
 
 local mutFlag = { enabled = false }
-pet:AddToggle("collectMutations", {
+main:AddToggle("collectMutations", {
     Title = "Auto Collect Mutated Fruits",
     Description = "Collects fruits with selected mutations",
     Default = false,
@@ -409,7 +409,7 @@ local fruitNames = {
 }
 local selectedFruits = {}
 
-pet:AddDropdown("fruitSelect", {
+main:AddDropdown("fruitSelect", {
     Title = "Select Fruit Types to Collect",
     Description = "Only collects selected fruit types",
     Values = fruitNames,
@@ -426,7 +426,7 @@ pet:AddDropdown("fruitSelect", {
 end)
 
 local fruitFlag = { enabled = false }
-pet:AddToggle("collectSpecificFruits", {
+main:AddToggle("collectSpecificFruits", {
     Title = "Auto Collect Specific Fruits",
     Description = "Collects fruits with selected names",
     Default = false,
