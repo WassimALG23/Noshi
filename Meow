@@ -275,11 +275,11 @@ local pickup_delay = 0.05
 local pickup_radius = 10000
 
 -- Section: Collect Plants
-local section = main:AddSection("Collect Plants")
+local section = pet:AddSection("Collect Plants")
 
 -- Stop if Full Toggle
 local stopOnFull = false
-main:AddToggle("stopOnFullToggle", {
+pet:AddToggle("stopOnFullToggle", {
     Title = "Stop if Backpack is Full",
     Description = "Skips collection if backpack is full",
     Default = false,
@@ -327,7 +327,7 @@ end
 
 -- 1. Collect All
 local allFlag = { enabled = false }
-section:AddToggle("collectAllFruits", {
+pet:AddToggle("collectAllFruits", {
     Title = "Auto Collect All Fruits",
     Description = "Collects every fruit",
     Default = false,
@@ -345,7 +345,7 @@ local mutationList = {
 }
 local selectedMutations = {}
 
-section:AddDropdown("mutationSelect", {
+pet:AddDropdown("mutationSelect", {
     Title = "Select Mutations to Collect",
     Description = "Only collects fruits with these mutations",
     Values = mutationList,
@@ -361,7 +361,7 @@ section:AddDropdown("mutationSelect", {
 end)
 
 local mutFlag = { enabled = false }
-section:AddToggle("collectMutations", {
+pet:AddToggle("collectMutations", {
     Title = "Auto Collect Mutated Fruits",
     Description = "Collects fruits with selected mutations",
     Default = false,
@@ -384,7 +384,7 @@ local fruitNames = {
 }
 local selectedFruits = {}
 
-section:AddDropdown("fruitSelect", {
+pet:AddDropdown("fruitSelect", {
     Title = "Select Fruit Types to Collect",
     Description = "Only collects selected fruit types",
     Values = fruitNames,
@@ -400,7 +400,7 @@ section:AddDropdown("fruitSelect", {
 end)
 
 local fruitFlag = { enabled = false }
-section:AddToggle("collectSpecificFruits", {
+pet:AddToggle("collectSpecificFruits", {
     Title = "Auto Collect Specific Fruits",
     Description = "Collects fruits with selected names",
     Default = false,
