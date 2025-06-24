@@ -89,12 +89,12 @@ local ui = Window:AddTab({
     })
 
 local vuln = Window:AddTab({
-        Title = "Vulnerabilidade",
+        Title = "vulnerabilitys",
         Icon = "circle-alert"
     })
 
 local event = Window:AddTab({
-    Title = "Eventos",
+    Title = "Events",
     Icon = "list"
 })
 
@@ -193,6 +193,19 @@ end
 
 function sm()
     ReplicatedStorage:WaitForChild("GameEvents"):WaitForChild("NightQuestRemoteEvent"):FireServer("SubmitAllPlants")
+end
+
+function blah()
+ReplicatedStorage:WaitForChild("GameEvents"):WaitForChild("Sell_Item"):FireServer()
+end
+
+function bbf()
+    svp()
+    hrp.CFrame = CFrame.new(86.57965850830078, 2.999999761581421, 0.4267919063568115)
+    task.wait(0.25)
+    blah()
+    task.wait(0.2)
+    tpt(Pos)
 end
 
 function tsf()
@@ -304,40 +317,39 @@ shop:AddToggle("", {
 -- 
 
 plant:AddButton({
-        Title = "Set local X",
-        Description = "click para setar o inicio do auto plant\n",
-        Callback = function()
-          x = Vector3.new(hrp.Position.X, 0.13552513718605042, hrp.Position.Z)
-          print(x)
-            
-        end
-    })
+    Title = "Set Plant position",
+    Description = "Click to set both X and Y to current position",
+    Callback = function()
+        local currentPos = hrp.Position
+        local fixedY = 0.13552513718605042
 
-plant:AddButton({
-        Title = "Set local Y",
-        Description = "click para setar o fim do auto plant\n",
-        Callback = function()
-          y = Vector3.new(hrp.Position.X, 0.13552513718605042, hrp.Position.Z)
-          print(y)
-        end
-    })
+        x = Vector3.new(currentPos.X, fixedY, currentPos.Z)
+        y = Vector3.new(currentPos.X, fixedY, currentPos.Z)
 
-local Slider = plant:AddSlider("Slider", 
-{
-    Title = "Distancia de uma seed para outra\n",
-    Description = "step seed\n",
-    Default = 0.001,
-    Min = 0.001,
-    Max = 0.1,
-    Rounding = 3,
-    Callback = function(Value)
-        step = Value
+        print("Start (X) and End (Y) positions set to:", x)
+    end
+})
+
+local Slider = plant:AddInput("StepInput", {
+    Title = "Step Between Seeds",
+    Description = "Enter the distance between the seeds (e.g., 0.005)",
+    Placeholder = "1",
+    Default = "0.001",
+    Numeric = true,
+    Callback = function(input)
+        local num = tonumber(input)
+        if num then
+            step = num
+            print("Step set to:", step)
+        else
+            warn("Invalid number entered for step.")
+        end
     end
 })
 
 plant:AddButton({
-    Title = "click para plantar",
-    Description = "esteja com a seed na mão",
+    Title = "click to plant",
+    Description = "have the seed in your hand",
     Callback = function()
         local player = game.Players.LocalPlayer
         local tool = player.Character and player.Character:FindFirstChildOfClass("Tool")
@@ -363,6 +375,13 @@ sell:AddButton({
     Callback = function()
         tsf()       
     end
+})
+sell:AddButton({
+    Title = "sell in hand",
+    Description= "sells the fruit ur holding",
+    Callback = function()
+bbf()
+end
 })
 
 --
