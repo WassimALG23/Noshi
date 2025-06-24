@@ -275,12 +275,23 @@ main:AddToggle("stopOnFullToggle", {
 
 -- Check if Backpack is Full
 local function isInventoryFull()
-    local stats = player:FindFirstChild("PlayerGui"):FindFirstChild("HUD") and player.PlayerGui.HUD:FindFirstChild("Stats")
+    local hud = player:FindFirstChild("PlayerGui") and player.PlayerGui:FindFirstChild("HUD")
+    local stats = hud and hud:FindFirstChild("Stats")
+
     if stats then
-        local capacity = tonumber(stats:FindFirstChild("CapacityLabel") and stats.CapacityLabel.Text:match("%d+"))
-        local current = tonumber(stats:FindFirstChild("FruitLabel") and stats.FruitLabel.Text:match("%d+"))
-        return current and capacity and current >= capacity
+        local capacityLabel = stats:FindFirstChild("CapacityLabel")
+        local fruitLabel = stats:FindFirstChild("FruitLabel")
+
+        if capacityLabel and fruitLabel then
+            local capacity = tonumber(string.match(capacityLabel.Text, "%d+"))
+            local current = tonumber(string.match(fruitLabel.Text, "%d+"))
+
+            if capacity and current then
+                return current >= capacity
+            end
+        end
     end
+
     return false
 end
 
@@ -373,8 +384,14 @@ section:AddDropdown("MutationsDropdown", {
     Default = {}
 }):OnChanged(function(selection)
     selectedMutations = {}
-    for name, picked in pairs(selection) do
-        if picked then table.insert(selectedMutations, name) end
+    
+for _, v in pairs(selection) do
+    if typeof(v) == "string" then
+        table.insert(selectedMutations, v)
+    elseif typeof(v) == "boolean" then
+        if v == true then
+            table.insert(selectedMutations, _)
+        end
     end
 end)
 
@@ -420,8 +437,13 @@ section:AddDropdown("FruitTypeDropdown", {
     Default = {}
 }):OnChanged(function(selection)
     selectedFruits = {}
-    for name, picked in pairs(selection) do
-        if picked then table.insert(selectedFruits, name) end
+for _, v in pairs(selection) do
+    if typeof(v) == "string" then
+        table.insert(selectedFruits, v)
+    elseif typeof(v) == "boolean" then
+        if v == true then
+            table.insert(selectedFruits, _)
+        end
     end
 end)
 
