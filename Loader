@@ -1,6 +1,7 @@
 game:GetService("StarterGui"):SetCore("SendNotification", {Title="Script loading...", Text="Made by Dead", Duration=5})
 
 local l = loadstring(game:HttpGet("https://raw.githubusercontent.com/discoart/FluentPlus/refs/heads/main/release.lua", true))()
+Button_Icon = "rbxassetid://97949487588216"
 local Window = l:CreateWindow({
     Title = "",
     SubTitle = "",
