@@ -11,8 +11,6 @@ if script_version.alpha == true then
     script_version.alpha = "Alpha version"
 else 
     script_version.alpha = "Release version"
-else 
-    script_version.alpha = "beta version"
 end
 print("MADE BY DEAD\nScript Version " .. script_version.version .. " - " .. script_version.alpha)
 local vful = script_version.version .." - ".. script_version.alpha
@@ -44,7 +42,7 @@ player.CharacterAdded:Connect(function(char)
     hrp = character:WaitForChild("HumanoidRootPart")
 end)
 
-local Fluent = loadstring(Game:HttpGet("https://raw.githubusercontent.com/discoart/FluentPlus/refs/heads/main/Beta.lua", true))()
+local Fluent = loadstring(Game:HttpGet("https://raw.githubusercontent.com/discoart/FluentPlus/refs/heads/main/release.lua"))()
 local Show_Button = true
 Button_Icon = "rbxassetid://97949487588216"
 local Window = Fluent:CreateWindow({
