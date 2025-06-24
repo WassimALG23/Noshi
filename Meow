@@ -83,6 +83,11 @@ local pet = Window:AddTab({
         Icon = "bone"
     })
 
+local esp = window:AddTab({ 
+        Title = "esp",
+        Icon = "scan-eye"
+    })
+
 local ui = Window:AddTab({
         Title = "UIs",
         Icon = "scroll"
@@ -853,6 +858,138 @@ event:AddToggle("auto submit", {
         end)
     end
 })
+--
+
+local eggEspEnabled = false
+local labelCache = {}
+local trackedEggs = {}
+local connections = {}
+
+Tab6:AddToggle("eggEspToggle", {
+    Title = "EGG ESP",
+    Description = "Toggle egg ESP on/off",
+    Default = false,
+    Callback = function(state)
+        eggEspEnabled = state
+
+        -- Clear all if turned off
+        if not eggEspEnabled then
+            for _, lbl in pairs(labelCache) do
+                if typeof(lbl) == "table" and lbl.Remove then
+                    lbl:Remove()
+                end
+            end
+            labelCache = {}
+            trackedEggs = {}
+
+            for _, conn in pairs(connections) do
+                if conn.Disconnect then pcall(function() conn:Disconnect() end) end
+            end
+            connections = {}
+            return
+        end
+
+        -- If turned ON
+        local rs = game:GetService("ReplicatedStorage")
+        local cs = game:GetService("CollectionService")
+        local players = game:GetService("Players")
+        local runService = game:GetService("RunService")
+        local lp = players.LocalPlayer
+        local cam = workspace.CurrentCamera
+
+        local fnHatch = getupvalue(getupvalue(getconnections(rs.GameEvents.PetEggService.OnClientEvent)[1].Function, 1), 2)
+        local eggList = getupvalue(fnHatch, 1)
+        local petList = getupvalue(fnHatch, 2)
+
+        local function findEggById(uuid)
+            for egg in eggList do
+                if egg:GetAttribute("OBJECT_UUID") == uuid then
+                    return egg
+                end
+            end
+        end
+
+        local function refreshLabel(uuid, pet)
+            local model = findEggById(uuid)
+            if not model or not labelCache[uuid] then return end
+            local eggType = model:GetAttribute("EggName")
+            labelCache[uuid].Text = `{eggType} | {pet}`
+        end
+
+        local function createLabel(model)
+            if model:GetAttribute("OWNER") ~= lp.Name then return end
+            local uuid = model:GetAttribute("OBJECT_UUID")
+            if not uuid or labelCache[uuid] then return end
+
+            local eggType = model:GetAttribute("EggName")
+            local pet = petList[uuid]
+
+            local txt = Drawing.new("Text")
+            txt.Text = `{eggType} | {pet or "?"}`
+            txt.Size = 18
+            txt.Color = Color3.new(1, 1, 1)
+            txt.Outline = true
+            txt.OutlineColor = Color3.new(0, 0, 0)
+            txt.Center = true
+            txt.Visible = false
+
+            labelCache[uuid] = txt
+            trackedEggs[uuid] = model
+        end
+
+        local function removeLabel(model)
+            local uuid = model:GetAttribute("OBJECT_UUID")
+            if uuid and labelCache[uuid] then
+                labelCache[uuid]:Remove()
+                labelCache[uuid] = nil
+                trackedEggs[uuid] = nil
+            end
+        end
+
+        local function updateLabels()
+            for uuid, model in pairs(trackedEggs) do
+                local lbl = labelCache[uuid]
+                if not model or not model:IsDescendantOf(workspace) or not lbl then
+                    if lbl then lbl.Visible = false end
+                    trackedEggs[uuid] = nil
+                    continue
+                end
+
+                local pos, visible = cam:WorldToViewportPoint(model:GetPivot().Position)
+                lbl.Position = Vector2.new(pos.X, pos.Y)
+                lbl.Visible = visible
+            end
+        end
+
+        -- Initial ESP on existing eggs
+        for _, inst in cs:GetTagged("PetEggServer") do
+            task.spawn(createLabel, inst)
+        end
+
+        -- Connect tag add/remove
+        table.insert(connections, cs:GetInstanceAddedSignal("PetEggServer"):Connect(createLabel))
+        table.insert(connections, cs:GetInstanceRemovedSignal("PetEggServer"):Connect(removeLabel))
+
+        -- Hook to hatch event
+        local orig; orig = hookfunction(getconnections(rs.GameEvents.EggReadyToHatch_RE.OnClientEvent)[1].Function, newcclosure(function(uuid, pet)
+            refreshLabel(uuid, pet)
+            return orig(uuid, pet)
+        end))
+
+        -- Continuous update
+        table.insert(connections, runService.PreRender:Connect(updateLabels))
+    end
+})
+
+
+
+
+
+
+
+
+
+
 --
 local versgame = (game:GetService("Players").LocalPlayer.PlayerGui.Version_UI.Version.Text):gsub("^v", "")
 
