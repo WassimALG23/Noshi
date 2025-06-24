@@ -865,7 +865,8 @@ local labelCache = {}
 local trackedEggs = {}
 local connections = {}
 
-Tab6:AddToggle("eggEspToggle", {
+local section = esp:AddSection("Seeds")
+esp:AddToggle("eggEspToggle", {
     Title = "EGG ESP",
     Description = "Toggle egg ESP on/off",
     Default = false,
