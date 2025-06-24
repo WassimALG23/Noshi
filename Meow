@@ -65,17 +65,17 @@ local shop = Window:AddTab({
 
 local plant = Window:AddTab({
     Title = "plant",
-    Icon = "list"
+    Icon = "leaf"
 })
 
 local sell = Window:AddTab({
     Title = "sell",
-    Icon = "circle-dollar-sign"
+    Icon = "banknote"
 })
 
 local player = Window:AddTab({
         Title = "Player",
-        Icon = "user-round"
+        Icon = "user"
     })
 
 local pet = Window:AddTab({
@@ -90,12 +90,12 @@ local ui = Window:AddTab({
 
 local vuln = Window:AddTab({
         Title = "vulnerabilitys",
-        Icon = "circle-alert"
+        Icon = "list"
     })
 
 local event = Window:AddTab({
     Title = "Events",
-    Icon = "list"
+    Icon = "calendar"
 })
 
 local config = Window:AddTab({
@@ -334,7 +334,7 @@ local Slider = plant:AddInput("StepInput", {
     Title = "Step Between Seeds",
     Description = "Enter the distance between the seeds (e.g., 0.005)",
     Placeholder = "1",
-    Default = "0.001",
+    Default = "1",
     Numeric = true,
     Callback = function(input)
         local num = tonumber(input)
@@ -346,10 +346,10 @@ local Slider = plant:AddInput("StepInput", {
         end
     end
 })
-
 plant:AddButton({
-    Title = "click to plant",
-    Description = "have the seed in your hand",
+    Title = "Click to Plant",
+    Description = "Make sure you're holding a seed/tool",
+    -- optional, use your global icon if you want
     Callback = function()
         local player = game.Players.LocalPlayer
         local tool = player.Character and player.Character:FindFirstChildOfClass("Tool")
@@ -358,15 +358,28 @@ plant:AddButton({
         local baseName = tool.Name:match("^(.-)%s+[Ss]eed") or tool.Name
         baseName = baseName:gsub("%s+$", "")
 
+        if not x or not y then
+            warn("❌ Please set both X and Y positions first!")
+            return
+        end
+
         local direction = (y - x).Unit
         local distance = (y - x).Magnitude
+
         for i = 0, distance, step do
             local pos = x + direction * i
-            Plant:FireServer(pos, baseName)
+
+            local args = {
+                Vector3.new(pos.X, pos.Y, pos.Z), -- vector.create equivalent
+                baseName
+            }
+
+            game:GetService("ReplicatedStorage"):WaitForChild("GameEvents"):WaitForChild("Plant_RE"):FireServer(unpack(args))
             task.wait()
         end
     end
 })
+
 --
 
 sell:AddButton({
