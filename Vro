@@ -57,21 +57,18 @@ local Window = Fluent:CreateWindow({
 })
 
 -- Local Tabs --
-
-local main = Window:AddTab({
+local plant = Window:AddTab({
     Title = "main",
     Icon = "house"
 })
+
 
 local shop = Window:AddTab({
     Title = "shop",
     Icon = "shopping-cart"
 })
 
-local plant = Window:AddTab({
-    Title = "plant",
-    Icon = "leaf"
-})
+
 
 local sell = Window:AddTab({
     Title = "sell",
@@ -244,13 +241,13 @@ end
 
 -- Local Script --
 
-        -- Section: Collect Plants local section = main:AddSection("Collect Plants")
+        -- Section: Collect Plants local section = plant:AddSection("Collect Plants")
 
--- Toggle: Stop if Backpack is Full local stopOnFull = false main:AddToggle("stopOnFullToggle", { Title = "Stop if Backpack is Full", Description = "Prevents collecting fruits if your backpack is full", Default = false, Callback = function(state) stopOnFull = state end })
+-- Toggle: Stop if Backpack is Full local stopOnFull = false plant:AddToggle("stopOnFullToggle", { Title = "Stop if Backpack is Full", Description = "Prevents collecting fruits if your backpack is full", Default = false, Callback = function(state) stopOnFull = state end })
 
 local function isInventoryFull() local stats = player:FindFirstChild("PlayerGui"):FindFirstChild("HUD") and player.PlayerGui.HUD:FindFirstChild("Stats") if stats then local capacity = tonumber(stats:FindFirstChild("CapacityLabel") and stats.CapacityLabel.Text:match("%d+")) local current = tonumber(stats:FindFirstChild("FruitLabel") and stats.FruitLabel.Text:match("%d+")) return current and capacity and current >= capacity end return false end
 
--- Toggle: Auto Collect All Fruits local autoCollectAllFruitsEnabled = false local autoCollectAllFruitsThread main:AddToggle("autoCollectAllFruits", { Title = "Auto Collect Fruits", Description = "Collects all fruits automatically", Default = false, Callback = function(state) autoCollectAllFruitsEnabled = state
+-- Toggle: Auto Collect All Fruits local autoCollectAllFruitsEnabled = false local autoCollectAllFruitsThread plant:AddToggle("autoCollectAllFruits", { Title = "Auto Collect Fruits", Description = "Collects all fruits automatically", Default = false, Callback = function(state) autoCollectAllFruitsEnabled = state
 
 if state then
         autoCollectAllFruitsThread = task.spawn(function()
@@ -297,9 +294,9 @@ end
 
 })
 
--- Dropdown: Select Mutations local mutationNames = { "Ripe","Gold","Rainbow","Wet","Windstruck","Moonlit","Chilled","Bloodlit","Twisted","Frozen", "Shocked","Celestial","Choc","Pollinated","Burnt","Verdant","HoneyGlazed","Plasma","Heavenly", "Paradisal","Cooked","Zombified","Molten","Sundried","Alienlike","Galactic","Disco","Voidtouched","Dawnbound" } local selectedMutations = {} section:AddDropdown("MutationsDropdown", { Title = "Select Mutations to Collect", Description = "Only collects fruits with these mutations", Values = mutationNames, Multi = true, Default = {} }):OnChanged(function(selection) selectedMutations = {} for name, picked in pairs(selection) do if picked then table.insert(selectedMutations, name) end end end)
+-- Dropdown: Select Mutations local mutationNames = { "Ripe","Gold","Rainbow","Wet","Windstruck","Moonlit","Chilled","Bloodlit","Twisted","Frozen", "Shocked","Celestial","Choc","Pollinated","Burnt","Verdant","HoneyGlazed","Plasma","Heavenly", "Paradisal","Cooked","Zombified","Molten","Sundried","Alienlike","Galactic","Disco","Voidtouched","Dawnbound" } local selectedMutations = {} plant:AddDropdown("MutationsDropdown", { Title = "Select Mutations to Collect", Description = "Only collects fruits with these mutations", Values = mutationNames, Multi = true, Default = {} }):OnChanged(function(selection) selectedMutations = {} for name, picked in pairs(selection) do if picked then table.insert(selectedMutations, name) end end end)
 
--- Toggle: Auto Collect Mutated Fruits local autoCollectMutationsEnabled = false local autoCollectMutationThread section:AddToggle("autoCollectMutations", { Title = "Auto Collect Mutated Fruits", Description = "Automatically picks only fruits with selected mutations", Default = false, Callback = function(state) autoCollectMutationsEnabled = state
+-- Toggle: Auto Collect Mutated Fruits local autoCollectMutationsEnabled = false local autoCollectMutationThread plant:AddToggle("autoCollectMutations", { Title = "Auto Collect Mutated Fruits", Description = "Automatically picks only fruits with selected mutations", Default = false, Callback = function(state) autoCollectMutationsEnabled = state
 
 if state then
         autoCollectMutationThread = task.spawn(function()
@@ -354,9 +351,9 @@ end
 
 })
 
--- Dropdown: Select Fruits (from wiki crop list) local fruitList = { "Carrot","Strawberry","Blueberry","Tomato","Cauliflower","Watermelon","Green Apple","Avocado", "Banana","Pineapple","Kiwi","Bell Pepper","Prickly Pear","Loquat","Feijoa","Sugar Apple" } local selectedFruits = {} section:AddDropdown("FruitTypeDropdown", { Title = "Select Fruits to Collect", Description = "Only collects these specific fruit types", Values = fruitList, Multi = true, Default = {} }):OnChanged(function(selection) selectedFruits = {} for name, picked in pairs(selection) do if picked then table.insert(selectedFruits, name) end end end)
+-- Dropdown: Select Fruits (from wiki crop list) local fruitList = { "Carrot","Strawberry","Blueberry","Tomato","Cauliflower","Watermelon","Green Apple","Avocado", "Banana","Pineapple","Kiwi","Bell Pepper","Prickly Pear","Loquat","Feijoa","Sugar Apple" } local selectedFruits = {} plant:AddDropdown("FruitTypeDropdown", { Title = "Select Fruits to Collect", Description = "Only collects these specific fruit types", Values = fruitList, Multi = true, Default = {} }):OnChanged(function(selection) selectedFruits = {} for name, picked in pairs(selection) do if picked then table.insert(selectedFruits, name) end end end)
 
--- Toggle: Auto Collect Selected Fruits local autoCollectSpecificEnabled = false local autoCollectSpecificThread section:AddToggle("autoCollectSpecificFruits", { Title = "Auto Collect Selected Fruits", Description = "Only collects fruits matching selected names", Default = false, Callback = function(state) autoCollectSpecificEnabled = state
+-- Toggle: Auto Collect Selected Fruits local autoCollectSpecificEnabled = false local autoCollectSpecificThread plant:AddToggle("autoCollectSpecificFruits", { Title = "Auto Collect Selected Fruits", Description = "Only collects fruits matching selected names", Default = false, Callback = function(state) autoCollectSpecificEnabled = state
 
 if state then
         autoCollectSpecificThread = task.spawn(function()
