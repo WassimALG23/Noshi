@@ -83,11 +83,6 @@ local pet = Window:AddTab({
         Icon = "bone"
     })
 
-local esp = window:AddTab({ 
-        Title = "esp",
-        Icon = "scan-eye"
-    })
-
 local ui = Window:AddTab({
         Title = "UIs",
         Icon = "scroll"
@@ -865,8 +860,8 @@ local labelCache = {}
 local trackedEggs = {}
 local connections = {}
 
-local section = esp:AddSection("Seeds")
-esp:AddToggle("eggEspToggle", {
+local section = ui:AddSection("Seeds")
+ui:AddToggle("eggEspToggle", {
     Title = "EGG ESP",
     Description = "Toggle egg ESP on/off",
     Default = false,
