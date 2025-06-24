@@ -261,6 +261,7 @@ function ufav()
 end
 
 -- Local Script --
+                            
 -- Section: Collect Plants
 local section = main:AddSection("Collect Plants")
 
@@ -285,13 +286,11 @@ local function isInventoryFull()
         if capacityLabel and fruitLabel then
             local capacity = tonumber(string.match(capacityLabel.Text, "%d+"))
             local current = tonumber(string.match(fruitLabel.Text, "%d+"))
-
             if capacity and current then
                 return current >= capacity
             end
         end
     end
-
     return false
 end
 
@@ -384,12 +383,10 @@ section:AddDropdown("MutationsDropdown", {
     Default = {}
 }):OnChanged(function(selection)
     selectedMutations = {}
-    
-for _, v in pairs(selection) do
-    if typeof(v) == "string" then
-        table.insert(selectedMutations, v)
-    elseif typeof(v) == "boolean" then
-        if v == true then
+    for _, v in pairs(selection) do
+        if typeof(v) == "string" then
+            table.insert(selectedMutations, v)
+        elseif typeof(v) == "boolean" and v == true then
             table.insert(selectedMutations, _)
         end
     end
@@ -426,7 +423,6 @@ section:AddToggle("autoCollectMutations", {
 --------------------------------
 -- Auto Collect Specific Fruit Names
 --------------------------------
-
 local selectedFruits = {}
 
 section:AddDropdown("FruitTypeDropdown", {
@@ -437,11 +433,10 @@ section:AddDropdown("FruitTypeDropdown", {
     Default = {}
 }):OnChanged(function(selection)
     selectedFruits = {}
-for _, v in pairs(selection) do
-    if typeof(v) == "string" then
-        table.insert(selectedFruits, v)
-    elseif typeof(v) == "boolean" then
-        if v == true then
+    for _, v in pairs(selection) do
+        if typeof(v) == "string" then
+            table.insert(selectedFruits, v)
+        elseif typeof(v) == "boolean" and v == true then
             table.insert(selectedFruits, _)
         end
     end
@@ -473,7 +468,8 @@ section:AddToggle("autoCollectSpecificFruits", {
             autoCollectSpecificThread = nil
         end
     end
-})
+})    
+
 
 
 
