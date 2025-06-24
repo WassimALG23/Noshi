@@ -977,8 +977,8 @@ section:AddToggle("eggEspToggle", {
     end
 })
 
-section:AddToggle("autoHatchToggle", {
-    Title = "Auto Hatch",
+ui:AddToggle("autoHatchToggle", {
+    Title = "Auto Hatchv2",
     Description = "Automatically hatches your READY eggs",
     Default = false,
     Callback = function(state)
