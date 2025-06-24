@@ -34,6 +34,16 @@ local hrp = character:WaitForChild("HumanoidRootPart")
 local humanoid = character:WaitForChild("Humanoid")
 local scrollingFrame = game:GetService("Players").LocalPlayer.PlayerGui.ActivePetUI.Frame.Main.ScrollingFrame
 local feedsc = game:GetService("ReplicatedStorage"):WaitForChild("GameEvents"):WaitForChild("ActivePetService")
+local players = game:GetService("Players")
+local replicated_storage = game:GetService("ReplicatedStorage")
+local get_farm = require(replicated_storage.Modules.GetFarm)
+local byte_net_reliable = replicated_storage:WaitForChild("ByteNetReliable")
+local buffer = buffer.fromstring("\1\1\0\1")
+
+local local_player = players.LocalPlayer
+local farm = get_farm(local_player)
+
+
 
 -- event local
 
@@ -261,163 +271,112 @@ function ufav()
 end
 
 -- Local Script --
-                            
-    -- Section: Collect Plants
+local pickup_delay = 0.05
+local pickup_radius = 10000
+
+-- Section: Collect Plants
 local section = main:AddSection("Collect Plants")
 
--- Settings
-local pickupRange = 10000
-local pickupDelay = 0.05
-
--- Toggle: Stop if Backpack is Full
+-- Stop if Full Toggle
 local stopOnFull = false
 main:AddToggle("stopOnFullToggle", {
     Title = "Stop if Backpack is Full",
-    Description = "Prevents collecting fruits if your backpack is full",
+    Description = "Skips collection if backpack is full",
     Default = false,
-    Callback = function(state)
-        stopOnFull = state
-    end
+    Callback = function(v) stopOnFull = v end
 })
 
--- Check Inventory Full
+-- Check Backpack
 local function isInventoryFull()
-    local hud = player:FindFirstChild("PlayerGui") and player.PlayerGui:FindFirstChild("HUD")
+    local hud = local_player:FindFirstChild("PlayerGui") and local_player.PlayerGui:FindFirstChild("HUD")
     local stats = hud and hud:FindFirstChild("Stats")
     if stats then
-        local capLabel = stats:FindFirstChild("CapacityLabel")
-        local fruitLabel = stats:FindFirstChild("FruitLabel")
-        if capLabel and fruitLabel then
-            local capacity = tonumber(capLabel.Text:match("%d+"))
-            local current = tonumber(fruitLabel.Text:match("%d+"))
-            if capacity and current then
-                return current >= capacity
-            end
-        end
+        local cap = tonumber(stats:FindFirstChild("CapacityLabel") and stats.CapacityLabel.Text:match("%d+"))
+        local cur = tonumber(stats:FindFirstChild("FruitLabel") and stats.FruitLabel.Text:match("%d+"))
+        if cap and cur then return cur >= cap end
     end
     return false
 end
 
--- Get Player's Farm
-local function getPlayerFarm()
-    for _, farm in pairs(workspace.Farm:GetChildren()) do
-        local data = farm:FindFirstChild("Important") and farm.Important:FindFirstChild("Data")
-        if data and data:FindFirstChild("Owner") and data.Owner.Value == player.Name then
-            return farm
-        end
-    end
-end
-
--- Shared Fruit Collector
-local function startFruitCollector(filterFn, flagRef)
-    local farm = getPlayerFarm()
-    if not farm then return end
-
+-- Fruit Collector
+local function collectFruits(filterFn, flagRef)
     task.spawn(function()
         while flagRef.enabled do
-            if stopOnFull and isInventoryFull() then
-                task.wait(1)
-                continue
-            end
+            if stopOnFull and isInventoryFull() then task.wait(1) continue end
 
-            local plants = farm:FindFirstChild("Plants_Physical")
-            local hrp = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
-            if not plants or not hrp then task.wait(1) continue end
+            for _, plant in next, farm.Important.Plants_Physical:GetChildren() do
+                if typeof(filterFn) == "function" and not filterFn(plant) then continue end
 
-            local pos = hrp.Position
+                byte_net_reliable:FireServer(buffer, { plant })
+                task.wait(pickup_delay)
 
-            for _, plant in ipairs(plants:GetChildren()) do
-                if plant:IsA("Model") then
-                    for _, desc in ipairs(plant:GetDescendants()) do
-                        if desc:IsA("ProximityPrompt") and desc.Parent and desc.Parent.Parent then
-                            local fruitModel = desc.Parent.Parent
-                            local weight = fruitModel:FindFirstChild("Weight")
-                            if weight and weight.Value > 0 then
-                                local valid = true
-                                if filterFn then
-                                    valid = filterFn(fruitModel)
-                                end
-
-                                if valid and (plant:GetPivot().Position - pos).Magnitude <= pickupRange then
-                                    fireproximityprompt(desc)
-                                    task.wait(pickupDelay)
-                                end
-                            end
+                if plant:FindFirstChild("Fruits", true) then
+                    for _, fruit in next, plant.Fruits:GetChildren() do
+                        if not filterFn or filterFn(fruit) then
+                            byte_net_reliable:FireServer(buffer, { fruit })
+                            task.wait(pickup_delay)
                         end
                     end
                 end
             end
 
-            task.wait()
+            task.wait(0.2)
         end
     end)
 end
 
----------------------------
--- 1. Auto Collect All
----------------------------
-local allFruitsFlag = { enabled = false }
-
-section:AddToggle("autoCollectAllFruits", {
+-- 1. Collect All
+local allFlag = { enabled = false }
+section:AddToggle("collectAllFruits", {
     Title = "Auto Collect All Fruits",
-    Description = "Collects all fruits automatically",
+    Description = "Collects every fruit",
     Default = false,
     Callback = function(state)
-        allFruitsFlag.enabled = state
-        if state then
-            startFruitCollector(nil, allFruitsFlag)
-        end
+        allFlag.enabled = state
+        if state then collectFruits(nil, allFlag) end
     end
 })
 
----------------------------
--- 2. Auto Collect Mutated
----------------------------
-local mutationNames = {
+-- 2. Collect by Mutation
+local mutationList = {
     "Ripe","Gold","Rainbow","Wet","Windstruck","Moonlit","Chilled","Bloodlit","Twisted","Frozen",
     "Shocked","Celestial","Choc","Pollinated","Burnt","Verdant","HoneyGlazed","Plasma","Heavenly",
     "Paradisal","Cooked","Zombified","Molten","Sundried","Alienlike","Galactic","Disco","Voidtouched","Dawnbound"
 }
 local selectedMutations = {}
 
-section:AddDropdown("MutationsDropdown", {
+section:AddDropdown("mutationSelect", {
     Title = "Select Mutations to Collect",
     Description = "Only collects fruits with these mutations",
-    Values = mutationNames,
+    Values = mutationList,
     Multi = true,
     Default = {}
 }):OnChanged(function(selection)
     selectedMutations = {}
-    for _, v in pairs(selection) do
-        if typeof(v) == "string" then
-            table.insert(selectedMutations, v)
-        elseif typeof(v) == "boolean" and v == true then
-            table.insert(selectedMutations, _)
+    for key, val in pairs(selection) do
+        if typeof(key) == "string" and val then
+            table.insert(selectedMutations, key)
         end
     end
 end)
 
-local mutationFlag = { enabled = false }
-
-section:AddToggle("autoCollectMutated", {
+local mutFlag = { enabled = false }
+section:AddToggle("collectMutations", {
     Title = "Auto Collect Mutated Fruits",
-    Description = "Collects fruits with selected mutations only",
+    Description = "Collects fruits with selected mutations",
     Default = false,
     Callback = function(state)
-        mutationFlag.enabled = state
+        mutFlag.enabled = state
         if state then
-            startFruitCollector(function(fruit)
-                local mut = fruit:GetAttribute("Mutation")
-                return mut and table.find(selectedMutations, mut)
-            end, mutationFlag)
+            collectFruits(function(obj)
+                return obj:GetAttribute("Mutation") and table.find(selectedMutations, obj:GetAttribute("Mutation"))
+            end, mutFlag)
         end
     end
 })
 
----------------------------
--- 3. Auto Collect by Fruit Name
----------------------------
-local fruitList = {
+-- 3. Collect by Fruit Name
+local fruitNames = {
     "Carrot","Strawberry","Blueberry","Tomato","Cauliflower","Watermelon","Green Apple","Avocado",
     "Banana","Pineapple","Kiwi","Bell Pepper","Prickly Pear","Loquat","Feijoa","Sugar Apple",
     "Plum","Blackberry","Durian","Mango","Dragon Fruit","Pear","Rambutan","Mangosteen",
@@ -425,39 +384,39 @@ local fruitList = {
 }
 local selectedFruits = {}
 
-section:AddDropdown("FruitTypeDropdown", {
-    Title = "Select Fruits to Collect",
-    Description = "Only collects fruits with selected names",
-    Values = fruitList,
+section:AddDropdown("fruitSelect", {
+    Title = "Select Fruit Types to Collect",
+    Description = "Only collects selected fruit types",
+    Values = fruitNames,
     Multi = true,
     Default = {}
 }):OnChanged(function(selection)
     selectedFruits = {}
-    for _, v in pairs(selection) do
-        if typeof(v) == "string" then
-            table.insert(selectedFruits, v)
-        elseif typeof(v) == "boolean" and v == true then
-            table.insert(selectedFruits, _)
+    for key, val in pairs(selection) do
+        if typeof(key) == "string" and val then
+            table.insert(selectedFruits, key)
         end
     end
 end)
 
-local fruitNameFlag = { enabled = false }
-
-section:AddToggle("autoCollectSpecificFruits", {
+local fruitFlag = { enabled = false }
+section:AddToggle("collectSpecificFruits", {
     Title = "Auto Collect Specific Fruits",
-    Description = "Collects only fruits matching selected names",
+    Description = "Collects fruits with selected names",
     Default = false,
     Callback = function(state)
-        fruitNameFlag.enabled = state
+        fruitFlag.enabled = state
         if state then
-            startFruitCollector(function(fruit)
-                local name = fruit:GetAttribute("Name")
-                return name and table.find(selectedFruits, name)
-            end, fruitNameFlag)
+            collectFruits(function(obj)
+                return obj:GetAttribute("Name") and table.find(selectedFruits, obj:GetAttribute("Name"))
+            end, fruitFlag)
         end
     end
 })
+
+    
+
+
         
 
 
