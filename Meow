@@ -114,7 +114,25 @@ InterfaceManager:SetFolder("GrowAGarden")
 InterfaceManager:BuildInterfaceSection(config)
 
 -- Local Variáveis --
-
+local fruitList = {
+    -- Basic to Prismatic crops
+    "Carrot","Strawberry","Chocolate Carrot","Blueberry","Wild Carrot","Rose",
+    "Tomato","Cauliflower","Pear","Raspberry","Watermelon","Pumpkin",
+    "Banana","Avocado","Cantaloupe","Green Apple","Peach","Pineapple","Kiwi",
+    "Bell Pepper","Prickly Pear","Parasol Flower","Cactus","Dragon Fruit",
+    "Loquat","Feijoa","Rosy Delight","Dragon Pepper","Pepper","Cacao",
+    "Ember Lily","Sugar Apple","Elephant Ears",
+    -- Event & Exotic / Seasonal crops
+    "Papaya","Passionfruit","Soul Fruit","Cursed Fruit",
+    -- Lunar Glow & related
+    "Nightshade","Glowshroom","Mint","Moonflower","Starfruit","Moonglow",
+    "Moon Blossom","Blood Banana","Moon Melon","Celestiberry","Moon Mango",
+    -- Bizzy Bee event crops including Suncoil
+    "Nectarine","Hive Fruit","Foxglove","Lilac","Pink Lily","Purple Dahlia",
+    "Sunflower","Lavender","Nectarshade","Lumira","Honeysuckle","Manuka Flower",
+    "Dandelion","Bee Balm","Crocus","Succulent","Bendboo","Violet Corn",
+    "Cocovine","Suncoil"
+}
 
 --[[ old
 local byallseed = {"Carrot", "Strawberry", "Blueberry", "Orange Tulip", "Tomato", "Corn", "Daffodil", "Watermelon", "Pumpkin", "Apple", "Bamboo", "Coconut", "Cactus", "Dragon Fruit", "Mango", "Grape", "Mushroom", "Pepper", "Cacao", "Beanstalk", "Ember Lily", "Sugar Apple"}
@@ -243,6 +261,199 @@ function ufav()
 end
 
 -- Local Script --
+-- Section: Collect Plants
+local section = main:AddSection("Collect Plants")
+
+-- Toggle: Stop if Backpack is Full
+local stopOnFull = false
+main:AddToggle("stopOnFullToggle", {
+    Title = "Stop if Backpack is Full",
+    Description = "Prevents collecting fruits if your backpack is full",
+    Default = false,
+    Callback = function(state) stopOnFull = state end
+})
+
+-- Check if Backpack is Full
+local function isInventoryFull()
+    local stats = player:FindFirstChild("PlayerGui"):FindFirstChild("HUD") and player.PlayerGui.HUD:FindFirstChild("Stats")
+    if stats then
+        local capacity = tonumber(stats:FindFirstChild("CapacityLabel") and stats.CapacityLabel.Text:match("%d+"))
+        local current = tonumber(stats:FindFirstChild("FruitLabel") and stats.FruitLabel.Text:match("%d+"))
+        return current and capacity and current >= capacity
+    end
+    return false
+end
+
+-- Get Player's Farm
+local function getPlayerFarm()
+    for _, farm in ipairs(workspace.Farm:GetChildren()) do
+        local data = farm:FindFirstChild("Important") and farm.Important:FindFirstChild("Data")
+        if data and data:FindFirstChild("Owner") and data.Owner.Value == player.Name then
+            return farm
+        end
+    end
+end
+
+-- Fruit Collection Logic
+local function collectFruits(filterFn)
+    local pickupRadius = 10000
+    local farm = getPlayerFarm()
+    if not farm then return end
+
+    local hrp = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+    if not hrp then return end
+    local pos = hrp.Position
+
+    local plants = farm.Important:FindFirstChild("Plants_Physical")
+    if not plants then return end
+
+    for _, plant in ipairs(plants:GetChildren()) do
+        local fruits = plant:FindFirstChild("Fruits")
+        if fruits then
+            for _, fruit in ipairs(fruits:GetChildren()) do
+                if filterFn(fruit) then
+                    for _, part in ipairs(fruit:GetDescendants()) do
+                        if part:IsA("BasePart") then
+                            local prompt = part:FindFirstChildOfClass("ProximityPrompt")
+                            if prompt and (part.Position - pos).Magnitude <= pickupRadius then
+                                fireproximityprompt(prompt)
+                                task.wait(0.05)
+                            end
+                        end
+                    end
+                end
+            end
+        end
+    end
+end
+
+--------------------------------
+-- Auto Collect All Fruits
+--------------------------------
+local autoCollectAllFruitsEnabled = false
+local autoCollectAllFruitsThread
+
+main:AddToggle("autoCollectAllFruits", {
+    Title = "Auto Collect Fruits",
+    Description = "Collects all fruits automatically",
+    Default = false,
+    Callback = function(state)
+        autoCollectAllFruitsEnabled = state
+
+        if state then
+            autoCollectAllFruitsThread = task.spawn(function()
+                while autoCollectAllFruitsEnabled do
+                    if stopOnFull and isInventoryFull() then task.wait(1) continue end
+                    collectFruits(function(_) return true end)
+                    task.wait(0.2)
+                end
+            end)
+        elseif autoCollectAllFruitsThread then
+            task.cancel(autoCollectAllFruitsThread)
+            autoCollectAllFruitsThread = nil
+        end
+    end
+})
+
+--------------------------------
+-- Auto Collect Mutated Fruits
+--------------------------------
+local mutationNames = {
+    "Ripe","Gold","Rainbow","Wet","Windstruck","Moonlit","Chilled","Bloodlit","Twisted","Frozen",
+    "Shocked","Celestial","Choc","Pollinated","Burnt","Verdant","HoneyGlazed","Plasma","Heavenly",
+    "Paradisal","Cooked","Zombified","Molten","Sundried","Alienlike","Galactic","Disco","Voidtouched","Dawnbound"
+}
+local selectedMutations = {}
+
+section:AddDropdown("MutationsDropdown", {
+    Title = "Select Mutations to Collect",
+    Description = "Only collects fruits with these mutations",
+    Values = mutationNames,
+    Multi = true,
+    Default = {}
+}):OnChanged(function(selection)
+    selectedMutations = {}
+    for name, picked in pairs(selection) do
+        if picked then table.insert(selectedMutations, name) end
+    end
+end)
+
+local autoCollectMutationsEnabled = false
+local autoCollectMutationThread
+
+section:AddToggle("autoCollectMutations", {
+    Title = "Auto Collect Mutated Fruits",
+    Description = "Automatically picks only fruits with selected mutations",
+    Default = false,
+    Callback = function(state)
+        autoCollectMutationsEnabled = state
+
+        if state then
+            autoCollectMutationThread = task.spawn(function()
+                while autoCollectMutationsEnabled do
+                    if stopOnFull and isInventoryFull() then task.wait(1) continue end
+                    collectFruits(function(fruit)
+                        local mut = fruit:GetAttribute("Mutation")
+                        return mut and table.find(selectedMutations, mut)
+                    end)
+                    task.wait(0.2)
+                end
+            end)
+        elseif autoCollectMutationThread then
+            task.cancel(autoCollectMutationThread)
+            autoCollectMutationThread = nil
+        end
+    end
+})
+
+--------------------------------
+-- Auto Collect Specific Fruit Names
+--------------------------------
+
+local selectedFruits = {}
+
+section:AddDropdown("FruitTypeDropdown", {
+    Title = "Select Fruits to Collect",
+    Description = "Only collects these specific fruit types",
+    Values = fruitList,
+    Multi = true,
+    Default = {}
+}):OnChanged(function(selection)
+    selectedFruits = {}
+    for name, picked in pairs(selection) do
+        if picked then table.insert(selectedFruits, name) end
+    end
+end)
+
+local autoCollectSpecificEnabled = false
+local autoCollectSpecificThread
+
+section:AddToggle("autoCollectSpecificFruits", {
+    Title = "Auto Collect Selected Fruits",
+    Description = "Only collects fruits matching selected names",
+    Default = false,
+    Callback = function(state)
+        autoCollectSpecificEnabled = state
+
+        if state then
+            autoCollectSpecificThread = task.spawn(function()
+                while autoCollectSpecificEnabled do
+                    if stopOnFull and isInventoryFull() then task.wait(1) continue end
+                    collectFruits(function(fruit)
+                        local name = fruit:GetAttribute("Name")
+                        return name and table.find(selectedFruits, name)
+                    end)
+                    task.wait(0.2)
+                end
+            end)
+        elseif autoCollectSpecificThread then
+            task.cancel(autoCollectSpecificThread)
+            autoCollectSpecificThread = nil
+        end
+    end
+})
+
+
 
 
 
