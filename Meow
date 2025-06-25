@@ -278,33 +278,7 @@ local pickup_radius = 10000
 -- Section: Collect Plants
 local section = pet:AddSection("Collect Plants")
 
--- Toggle: Stop if Backpack is Full
-local stopOnFull = false
-pet:AddToggle("stopOnFullToggle", {
-    Title = "Stop if Backpack is Full",
-    Description = "Skips collection if backpack is full",
-    Default = false,
-    Callback = function(v)
-        stopOnFull = v
-        print("[DEBUG] stopOnFull set to:", v)
-    end
-})
-
 -- Check Backpack
-local function isInventoryFull()
-    local hud = local_player:FindFirstChild("PlayerGui") and local_player.PlayerGui:FindFirstChild("HUD")
-    local stats = hud and hud:FindFirstChild("Stats")
-    if stats then
-        local cap = tonumber(stats:FindFirstChild("CapacityLabel") and stats.CapacityLabel.Text:match("%d+"))
-        local cur = tonumber(stats:FindFirstChild("FruitLabel") and stats.FruitLabel.Text:match("%d+"))
-        if cap and cur then
-            print("[DEBUG] Inventory check: ", cur, "/", cap)
-            return cur >= cap
-        end
-    end
-    print("[DEBUG] Inventory check failed (missing HUD/stats)")
-    return false
-end
 
 -- Fruit Collector with debug
 local function collectFruits(filterFn, flagRef, label)
@@ -359,88 +333,63 @@ pet:AddToggle("collectAllFruits", {
     end
 })
 
--- Collect by Mutation
-local mutationList = {
-    "Ripe","Gold","Rainbow","Wet","Windstruck","Moonlit","Chilled","Bloodlit","Twisted","Frozen",
-    "Shocked","Celestial","Choc","Pollinated","Burnt","Verdant","HoneyGlazed","Plasma","Heavenly",
-    "Paradisal","Cooked","Zombified","Molten","Sundried","Alienlike","Galactic","Disco","Voidtouched","Dawnbound"
-}
-local selectedMutations = {}
+--✅ Fixed & Cleaned Fruit Mutation ESP Script
 
-pet:AddDropdown("mutationSelect", {
-    Title = "Select Mutations to Collect",
-    Description = "Only collects fruits with these mutations",
-    Values = mutationList,
-    Multi = true,
-    Default = {}
-}):OnChanged(function(selection)
-    selectedMutations = {}
-    for key, val in pairs(selection) do
-        if typeof(key) == "string" and val then
-            table.insert(selectedMutations, key)
+--// Services local Players = game:GetService("Players") local ReplicatedStorage = game:GetService("ReplicatedStorage") local RunService = game:GetService("RunService")
+
+--// Modules & Setup local player = Players.LocalPlayer local get_farm = require(ReplicatedStorage.Modules.GetFarm) local bufferLib = require(ReplicatedStorage.Modules.Buffer) local buffer = bufferLib.fromstring("\1\1\0\1") local ByteNet = ReplicatedStorage:WaitForChild("ByteNetReliable") local farm = get_farm(player)
+
+--// Mutation List local mutationList = { "Ripe", "Gold", "Rainbow", "Wet", "Windstruck", "Moonlit", "Chilled", "Bloodlit", "Twisted", "Frozen", "Shocked", "Celestial", "Choc", "Pollinated", "Burnt", "Verdant", "HoneyGlazed", "Plasma", "Heavenly", "Paradisal", "Cooked", "Zombified", "Molten", "Sundried", "Alienlike", "Galactic", "Disco", "Voidtouched", "Dawnbound" }
+
+--// ESP State local selectedMutationESP = nil local espEnabled = false local currentESP = {}
+
+--// Clear ESP local function clearESP() for _, espGui in pairs(currentESP) do if espGui and espGui.Destroy then pcall(function() espGui:Destroy() end) end end table.clear(currentESP) end
+
+--// Draw ESP for selected mutation local function drawMutationESP() clearESP() if not farm or not farm:FindFirstChild("Important") then return end local plants = farm.Important:FindFirstChild("Plants_Physical") if not plants then return end
+
+for _, plant in pairs(plants:GetChildren()) do
+    local fruits = plant:FindFirstChild("Fruits")
+    if fruits then
+        for _, fruit in pairs(fruits:GetChildren()) do
+            local mut = fruit:GetAttribute("Mutation")
+            if mut and mut == selectedMutationESP then
+                local part = fruit:FindFirstChildWhichIsA("BasePart")
+                if part then
+                    local gui = Instance.new("BillboardGui")
+                    gui.Name = "MutationESP"
+                    gui.Adornee = part
+                    gui.Size = UDim2.new(0, 100, 0, 30)
+                    gui.AlwaysOnTop = true
+                    gui.StudsOffset = Vector3.new(0, 3, 0)
+
+                    local label = Instance.new("TextLabel")
+                    label.Size = UDim2.new(1, 0, 1, 0)
+                    label.BackgroundTransparency = 1
+                    label.TextColor3 = Color3.fromRGB(255, 200, 0)
+                    label.TextStrokeTransparency = 0.5
+                    label.Text = "[" .. mut .. "]"
+                    label.Font = Enum.Font.GothamBold
+                    label.TextScaled = true
+                    label.Parent = gui
+
+                    gui.Parent = part
+                    table.insert(currentESP, gui)
+                end
+            end
         end
     end
-    print("[DEBUG] Selected Mutations:", table.concat(selectedMutations, ", "))
-end)
+end
 
-local mutFlag = { enabled = false }
-pet:AddToggle("collectMutations", {
-    Title = "Auto Collect Mutated Fruits",
-    Description = "Collects fruits with selected mutations",
-    Default = false,
-    Callback = function(state)
-        mutFlag.enabled = state
-        print("[DEBUG] Mutation Toggle:", state)
-        if state then
-            collectFruits(function(fruit)
-                local mut = fruit:GetAttribute("Mutation")
-                return mut and table.find(selectedMutations, mut)
-            end, mutFlag, "Mutations")
-        end
-    end
-})
+end
 
--- Collect by Fruit Name
-local fruitNames = {
-    "Carrot","Strawberry","Blueberry","Tomato","Cauliflower","Watermelon","Green Apple","Avocado",
-    "Banana","Pineapple","Kiwi","Bell Pepper","Prickly Pear","Loquat","Feijoa","Sugar Apple",
-    "Plum","Blackberry","Durian","Mango","Dragon Fruit","Pear","Rambutan","Mangosteen",
-    "Coconut","Fig","Passion Fruit","Guava","Apple","Lime","Lemon","Orange","Peach","Cherry"
-}
-local selectedFruits = {}
+--// ESP Watcher Loop RunService.Heartbeat:Connect(function() if espEnabled and selectedMutationESP then drawMutationESP() else clearESP() end end)
 
-pet:AddDropdown("fruitSelect", {
-    Title = "Select Fruit Types to Collect",
-    Description = "Only collects selected fruit types",
-    Values = fruitNames,
-    Multi = true,
-    Default = {}
-}):OnChanged(function(selection)
-    selectedFruits = {}
-    for key, val in pairs(selection) do
-        if typeof(key) == "string" and val then
-            table.insert(selectedFruits, key)
-        end
-    end
-    print("[DEBUG] Selected Fruits:", table.concat(selectedFruits, ", "))
-end)
+--// UI Hookup esp:AddDropdown("mutationEspSelect", { Title = "Mutation ESP Selector", Description = "Choose a mutation to highlight", Values = mutationList, Multi = false, Default = nil }):OnChanged(function(value) selectedMutationESP = value print("[ESP] Mutation selected:", value) end)
 
-local fruitFlag = { enabled = false }
-pet:AddToggle("collectSpecificFruits", {
-    Title = "Auto Collect Specific Fruits",
-    Description = "Collects fruits with selected names",
-    Default = false,
-    Callback = function(state)
-        fruitFlag.enabled = state
-        print("[DEBUG] Specific Fruits Toggle:", state)
-        if state then
-            collectFruits(function(fruit)
-                local name = fruit:GetAttribute("Name")
-                return name and table.find(selectedFruits, name)
-            end, fruitFlag, "Specific Fruits")
-        end
-    end
-})
+esp:AddToggle("mutationEspToggle", { Title = "Enable Mutation ESP", Description = "Highlights fruits with selected mutation", Default = false, Callback = function(state) espEnabled = state print("[ESP] Enabled:", state) if not state then clearESP() end end })
+
+
+
 
         
 
