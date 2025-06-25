@@ -1,0 +1,64 @@
+-- ✅ FULL STELLAR UI WITH MUTATION ESP FUNCTIONALITY
+
+-- Required Services local Players = game:GetService("Players") local player = Players.LocalPlayer local runService = game:GetService("RunService")
+
+-- Required Remote & Farm Setup local replicated_storage = game:GetService("ReplicatedStorage") local get_farm = require(replicated_storage.Modules.GetFarm) local farm = get_farm(player)
+
+-- Global ESP Variables local currentESP = {} local selectedMutationESP = nil local espEnabled = false
+
+-- Clean ESP local function clearMutationESP() for _, v in pairs(currentESP) do if v and v.Destroy then pcall(function() v:Destroy() end) end end table.clear(currentESP) end
+
+-- Draw ESP on matching fruits local function drawMutationESP() clearMutationESP()
+
+if not farm or not farm:FindFirstChild("Important") then return end
+local plants = farm.Important:FindFirstChild("Plants_Physical")
+if not plants then return end
+
+for _, plant in ipairs(plants:GetChildren()) do
+    local fruits = plant:FindFirstChild("Fruits")
+    if fruits then
+        for _, fruit in ipairs(fruits:GetChildren()) do
+            local mut = fruit:GetAttribute("Mutation")
+            if mut and mut == selectedMutationESP then
+                local head = fruit:FindFirstChildWhichIsA("BasePart")
+                if head then
+                    local bb = Instance.new("BillboardGui")
+                    bb.Name = "MutationESP"
+                    bb.Adornee = head
+                    bb.Size = UDim2.new(0, 100, 0, 30)
+                    bb.AlwaysOnTop = true
+                    bb.StudsOffset = Vector3.new(0, 3, 0)
+
+                    local label = Instance.new("TextLabel", bb)
+                    label.Size = UDim2.new(1, 0, 1, 0)
+                    label.BackgroundTransparency = 1
+                    label.TextColor3 = Color3.fromRGB(255, 200, 0)
+                    label.TextStrokeTransparency = 0.5
+                    label.Text = "[" .. mut .. "]"
+                    label.Font = Enum.Font.GothamBold
+                    label.TextScaled = true
+
+                    bb.Parent = head
+                    table.insert(currentESP, bb)
+                end
+            end
+        end
+    end
+end
+
+end
+
+-- Watcher task.spawn(function() while true do if espEnabled and selectedMutationESP then drawMutationESP() else clearMutationESP() end task.wait(1) end end)
+
+-- UI SETUP local StellarLibrary = loadstring(game:HttpGet("https://raw.githubusercontent.com/x2zu/OPEN-SOURCE-UI-ROBLOX/refs/heads/main/X2ZU%20UI%20ROBLOX%20OPEN%20SOURCE/NewUiStellar.lua"))() if StellarLibrary:LoadAnimation() then StellarLibrary:StartLoad() end if StellarLibrary:LoadAnimation() then StellarLibrary:Loaded() end
+
+local Window = StellarLibrary:Window({ SubTitle = "Mutation ESP by ChatGPT", Size = UDim2.new(0, 500, 0, 320), TabWidth = 140 })
+
+local esp = Window:Tab("ESP", "rbxassetid://128891143813807")
+
+local mutationList = { "Ripe","Gold","Rainbow","Wet","Windstruck","Moonlit","Chilled","Bloodlit","Twisted","Frozen", "Shocked","Celestial","Choc","Pollinated","Burnt","Verdant","HoneyGlazed","Plasma","Heavenly", "Paradisal","Cooked","Zombified","Molten","Sundried","Alienlike","Galactic","Disco","Voidtouched","Dawnbound" }
+
+esp:Seperator("Fruit Mutation ESP") esp:Dropdown("Mutation Type", mutationList, nil, function(choice) selectedMutationESP = choice StellarLibrary:Notify("Selected ESP: " .. choice) end)
+
+esp:AddToggle("Enable Mutation ESP", nil, function(t) espEnabled = t if not t then StellarLibrary:Notify("ESP Disabled") clearMutationESP() else StellarLibrary:Notify("ESP Enabled") end end)
+
