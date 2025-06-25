@@ -40,29 +40,49 @@ task.spawn(function()
     end
 end)
 
+local savedPos = nil
+
+-- Set TP Location Button
 Tabs.Main:AddButton({
-    Title = "Steal",
-    Description = "Spam if not working (teleports you to middle)",
+    Title = "Set TP Location (better if middle)",
+    Description = "Sets your current position as the teleport location",
     Callback = function()
         local player = game.Players.LocalPlayer
-        local pos = CFrame.new(0, -500, 0)
-        local startT = os.clock()
-        while os.clock() - startT < 1 do
-            if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
-                player.Character.HumanoidRootPart.CFrame = pos
-            end
-            task.wait()
+        if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+            savedPos = player.Character.HumanoidRootPart.CFrame
+            print("Teleport position saved.")
         end
     end
 })
 
-local SpeedSlider = Tabs.Main:AddSlider("Slider", {
-    Title = "Speed Boost",
-    Default = 0,
-    Min = 0,
-    Max = 6,
-    Rounding = 1,
+-- Steal Button
+Tabs.Main:AddButton({
+    Title = "Steal",
+    Description = "Spam if not working (teleports you to saved location)",
+    Callback = function()
+        local player = game.Players.LocalPlayer
+        if not savedPos then
+            warn("No TP location saved! Please set it first.")
+            return
+        end
+
+        local hrp = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+        if not hrp then return end
+
+        local duration = 0.5 -- Smooth teleport time
+        local steps = 20
+        local startPos = hrp.Position
+        local goalPos = savedPos.Position
+
+        for i = 1, steps do
+            local alpha = i / steps
+            local newPos = startPos:Lerp(goalPos, alpha)
+            hrp.CFrame = CFrame.new(newPos)
+            task.wait(duration / steps)
+        end
+    end
 })
+
 
 Tabs.Main:AddParagraph({
     Title = "Use Speed Coil/Invisibility Cloak For Higher Speed",
