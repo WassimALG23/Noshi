@@ -989,93 +989,69 @@ esp:AddToggle("eggEspToggle", {
 		end
 	end
 })
--- Define mutation list
 
 
--- Selected mutation
-local selectedMutationESP = nil
+-- ✅ FULL MUTATION ESP USING YOUR CUSTOM UI (pet/esp references)
 
--- ESP toggle control
-local espEnabled = false
+-- Required Services local Players = game:GetService("Players") local player = Players.LocalPlayer local replicated_storage = game:GetService("ReplicatedStorage") local get_farm = require(replicated_storage.Modules.GetFarm)
 
--- Mutation dropdown
-esp:AddDropdown("mutationEspSelect", {
-    Title = "ESP: Mutation Filter",
-    Description = "Only show ESP for fruits with selected mutation",
-    Values = mutationList,
-    Multi = false,
-    Default = nil
-}):OnChanged(function(value)
-    selectedMutationESP = value
-    print("[ESP DEBUG] Selected Mutation for ESP:", selectedMutationESP)
-end)
+-- Setup local farm = get_farm(player) local currentESP = {} local selectedMutationESP = nil local espEnabled = false
 
--- Toggle to activate/deactivate ESP
-esp:AddToggle("mutationEspToggle", {
-    Title = "Enable Fruit Mutation ESP",
-    Description = "Draws ESP for fruits with selected mutation",
-    Default = false,
-    Callback = function(state)
-        espEnabled = state
-        print("[ESP DEBUG] ESP state changed:", state)
+-- Mutation List local mutationList = { "Ripe","Gold","Rainbow","Wet","Windstruck","Moonlit","Chilled","Bloodlit","Twisted","Frozen", "Shocked","Celestial","Choc","Pollinated","Burnt","Verdant","HoneyGlazed","Plasma","Heavenly", "Paradisal","Cooked","Zombified","Molten","Sundried","Alienlike","Galactic","Disco","Voidtouched","Dawnbound" }
 
-        if state then
-            task.spawn(function()
-                while espEnabled do
-                    -- Clean up old ESP
-                    for _, v in pairs(workspace:GetDescendants()) do
-                        if v:IsA("BillboardGui") and v.Name == "MutationESP" then
-                            v:Destroy()
-                        end
-                    end
+-- Clean ESP local function clearMutationESP() for _, v in pairs(currentESP) do if v and v.Destroy then pcall(function() v:Destroy() end) end end table.clear(currentESP) end
 
-                    -- Draw ESP for matching fruits
-                    for _, plant in pairs(farm.Important.Plants_Physical:GetChildren()) do
-                        local fruits = plant:FindFirstChild("Fruits")
-                        if fruits then
-                            for _, fruit in pairs(fruits:GetChildren()) do
-                                local mut = fruit:GetAttribute("Mutation")
-                                if mut and mut == selectedMutationESP then
-                                    for _, part in pairs(fruit:GetDescendants()) do
-                                        if part:IsA("BasePart") then
-                                            local gui = Instance.new("BillboardGui")
-                                            gui.Name = "MutationESP"
-                                            gui.Adornee = part
-                                            gui.Size = UDim2.new(0, 100, 0, 30)
-                                            gui.AlwaysOnTop = true
-                                            gui.StudsOffset = Vector3.new(0, 2, 0)
+-- Draw ESP local function drawMutationESP() clearMutationESP() if not farm or not farm:FindFirstChild("Important") then return end local plants = farm.Important:FindFirstChild("Plants_Physical") if not plants then return end
 
-                                            local label = Instance.new("TextLabel", gui)
-                                            label.Size = UDim2.new(1, 0, 1, 0)
-                                            label.BackgroundTransparency = 1
-                                            label.Text = "[💫 " .. mut .. " 💫]"
-                                            label.TextColor3 = Color3.fromRGB(255, 200, 0)
-                                            label.TextStrokeTransparency = 0.5
-                                            label.TextScaled = true
-                                            label.Font = Enum.Font.GothamBold
+for _, plant in ipairs(plants:GetChildren()) do
+    local fruits = plant:FindFirstChild("Fruits")
+    if fruits then
+        for _, fruit in ipairs(fruits:GetChildren()) do
+            local mut = fruit:GetAttribute("Mutation")
+            if mut and mut == selectedMutationESP then
+                local head = fruit:FindFirstChildWhichIsA("BasePart")
+                if head then
+                    local bb = Instance.new("BillboardGui")
+                    bb.Name = "MutationESP"
+                    bb.Adornee = head
+                    bb.Size = UDim2.new(0, 100, 0, 30)
+                    bb.AlwaysOnTop = true
+                    bb.StudsOffset = Vector3.new(0, 3, 0)
 
-                                            gui.Parent = part
-                                        end
-                                    end
-                                end
-                            end
-                        end
-                    end
+                    local label = Instance.new("TextLabel", bb)
+                    label.Size = UDim2.new(1, 0, 1, 0)
+                    label.BackgroundTransparency = 1
+                    label.TextColor3 = Color3.fromRGB(255, 200, 0)
+                    label.TextStrokeTransparency = 0.5
+                    label.Text = "[" .. mut .. "]"
+                    label.Font = Enum.Font.GothamBold
+                    label.TextScaled = true
 
-                    task.wait(1) -- ESP refresh rate
+                    bb.Parent = head
+                    table.insert(currentESP, bb)
                 end
-
-                -- Clean up when disabled
-                for _, v in pairs(workspace:GetDescendants()) do
-                    if v:IsA("BillboardGui") and v.Name == "MutationESP" then
-                        v:Destroy()
-                    end
-                end
-                print("[ESP DEBUG] ESP stopped and cleaned.")
-            end)
+            end
         end
     end
-})
+end
+
+end
+
+-- ESP Thread spawn(function() while true do if espEnabled and selectedMutationESP then drawMutationESP() else clearMutationESP() end task.wait(1) end end)
+
+-- UI Integration (your custom system) esp:AddDropdown("mutationEspSelect", { Title = "Mutation ESP Selector", Description = "Choose a mutation to highlight", Values = mutationList, Multi = false, Default = nil }):OnChanged(function(value) selectedMutationESP = value print("[ESP] Mutation selected:", value) end)
+
+esp:AddToggle("mutationEspToggle", { Title = "Enable Mutation ESP", Description = "Highlights fruits with selected mutation", Default = false, Callback = function(state) espEnabled = state print("[ESP] Enabled:", state) if not state then clearMutationESP() end end })
+
+
+
+
+
+
+
+
+
+
 
 -- ✅ Auto Hatch Toggle
 pet:AddToggle("autoHatchToggle", {
