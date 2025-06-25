@@ -42,44 +42,50 @@ end)
 
 local savedPos = nil
 
--- Set TP Location Button
+-- Save current position
 Tabs.Main:AddButton({
     Title = "Set TP Location (better if middle)",
-    Description = "Sets your current position as the teleport location",
+    Description = "Sets your current position as the TP target",
     Callback = function()
         local player = game.Players.LocalPlayer
-        if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
-            savedPos = player.Character.HumanoidRootPart.CFrame
-            print("Teleport position saved.")
+        local character = player.Character or player.CharacterAdded:Wait()
+        local hrp = character:FindFirstChild("HumanoidRootPart")
+        if hrp then
+            savedPos = hrp.Position
+            print("✅ Saved teleport location:", savedPos)
+        else
+            warn("❌ Couldn't find HumanoidRootPart.")
         end
     end
 })
 
--- Steal Button
+-- Fast Slide using BodyVelocity
 Tabs.Main:AddButton({
     Title = "Steal",
-    Description = "Spam if not working (teleports you to saved location)",
+    Description = "Smoothly slides you to the saved location (anti-cheat friendly)",
     Callback = function()
         local player = game.Players.LocalPlayer
-        if not savedPos then
-            warn("No TP location saved! Please set it first.")
-            return
-        end
+        local character = player.Character or player.CharacterAdded:Wait()
+        local hrp = character:FindFirstChild("HumanoidRootPart")
 
-        local hrp = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
-        if not hrp then return end
+        if not savedPos then return warn("❌ No teleport location saved!") end
+        if not hrp then return warn("❌ No HumanoidRootPart found!") end
 
-        local duration = 0.5 -- Smooth teleport time
-        local steps = 20
-        local startPos = hrp.Position
-        local goalPos = savedPos.Position
+        local direction = (savedPos - hrp.Position).Unit
+        local distance = (savedPos - hrp.Position).Magnitude
+        local travelTime = math.clamp(distance / 100, 0.3, 1.2) -- tweak speed here
+        local velocity = direction * (distance / travelTime)
 
-        for i = 1, steps do
-            local alpha = i / steps
-            local newPos = startPos:Lerp(goalPos, alpha)
-            hrp.CFrame = CFrame.new(newPos)
-            task.wait(duration / steps)
-        end
+        -- Create BodyVelocity
+        local bv = Instance.new("BodyVelocity")
+        bv.MaxForce = Vector3.new(1e5, 0, 1e5)
+        bv.Velocity = velocity
+        bv.P = 1250
+        bv.Parent = hrp
+
+        task.wait(travelTime)
+        bv:Destroy()
+        hrp.Velocity = Vector3.zero
     end
 })
 
