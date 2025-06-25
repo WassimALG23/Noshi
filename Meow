@@ -394,9 +394,9 @@ end
 
 --// ESP Watcher Loop RunService.Heartbeat:Connect(function() if espEnabled and selectedMutationESP then drawMutationESP() else clearESP() end end)
 
---// UI Hookup esp:AddDropdown("mutationEspSelect", { Title = "Mutation ESP Selector", Description = "Choose a mutation to highlight", Values = mutationList, Multi = false, Default = nil }):OnChanged(function(value) selectedMutationESP = value print("[ESP] Mutation selected:", value) end)
+--// UI Hookup pet:AddDropdown("mutationEspSelect", { Title = "Mutation ESP Selector", Description = "Choose a mutation to highlight", Values = mutationList, Multi = false, Default = nil }):OnChanged(function(value) selectedMutationESP = value print("[ESP] Mutation selected:", value) end)
 
-esp:AddToggle("mutationEspToggle", { Title = "Enable Mutation ESP", Description = "Highlights fruits with selected mutation", Default = false, Callback = function(state) espEnabled = state print("[ESP] Enabled:", state) if not state then clearESP() end end })
+pet:AddToggle("mutationEspToggle", { Title = "Enable Mutation ESP", Description = "Highlights fruits with selected mutation", Default = false, Callback = function(state) espEnabled = state print("[ESP] Enabled:", state) if not state then clearESP() end end })
 
 
 
