@@ -846,34 +846,36 @@ esp:AddToggle("eggEspToggle", {
 })
 
 
--- ✅ FULL MUTATION ESP USING YOUR CUSTOM UI (pet/esp references)
+--✅ Fixed & Cleaned Fruit Mutation ESP Script
 
--- Required Services local Players = game:GetService("Players") local player = Players.LocalPlayer local replicated_storage = game:GetService("ReplicatedStorage") local get_farm = require(replicated_storage.Modules.GetFarm)
+--// Services local Players = game:GetService("Players") local ReplicatedStorage = game:GetService("ReplicatedStorage") local RunService = game:GetService("RunService")
 
--- Setup local farm = get_farm(player) local currentESP = {} local selectedMutationESP = nil local espEnabled = false
+--// Modules & Setup local player = Players.LocalPlayer local get_farm = require(ReplicatedStorage.Modules.GetFarm) local bufferLib = require(ReplicatedStorage.Modules.Buffer) local buffer = bufferLib.fromstring("\1\1\0\1") local ByteNet = ReplicatedStorage:WaitForChild("ByteNetReliable") local farm = get_farm(player)
 
--- Mutation List local mutationList = { "Ripe","Gold","Rainbow","Wet","Windstruck","Moonlit","Chilled","Bloodlit","Twisted","Frozen", "Shocked","Celestial","Choc","Pollinated","Burnt","Verdant","HoneyGlazed","Plasma","Heavenly", "Paradisal","Cooked","Zombified","Molten","Sundried","Alienlike","Galactic","Disco","Voidtouched","Dawnbound" }
+--// Mutation List local mutationList = { "Ripe", "Gold", "Rainbow", "Wet", "Windstruck", "Moonlit", "Chilled", "Bloodlit", "Twisted", "Frozen", "Shocked", "Celestial", "Choc", "Pollinated", "Burnt", "Verdant", "HoneyGlazed", "Plasma", "Heavenly", "Paradisal", "Cooked", "Zombified", "Molten", "Sundried", "Alienlike", "Galactic", "Disco", "Voidtouched", "Dawnbound" }
 
--- Clean ESP local function clearMutationESP() for _, v in pairs(currentESP) do if v and v.Destroy then pcall(function() v:Destroy() end) end end table.clear(currentESP) end
+--// ESP State local selectedMutationESP = nil local espEnabled = false local currentESP = {}
 
--- Draw ESP local function drawMutationESP() clearMutationESP() if not farm or not farm:FindFirstChild("Important") then return end local plants = farm.Important:FindFirstChild("Plants_Physical") if not plants then return end
+--// Clear ESP local function clearESP() for _, espGui in pairs(currentESP) do if espGui and espGui.Destroy then pcall(function() espGui:Destroy() end) end end table.clear(currentESP) end
 
-for _, plant in ipairs(plants:GetChildren()) do
+--// Draw ESP for selected mutation local function drawMutationESP() clearESP() if not farm or not farm:FindFirstChild("Important") then return end local plants = farm.Important:FindFirstChild("Plants_Physical") if not plants then return end
+
+for _, plant in pairs(plants:GetChildren()) do
     local fruits = plant:FindFirstChild("Fruits")
     if fruits then
-        for _, fruit in ipairs(fruits:GetChildren()) do
+        for _, fruit in pairs(fruits:GetChildren()) do
             local mut = fruit:GetAttribute("Mutation")
             if mut and mut == selectedMutationESP then
-                local head = fruit:FindFirstChildWhichIsA("BasePart")
-                if head then
-                    local bb = Instance.new("BillboardGui")
-                    bb.Name = "MutationESP"
-                    bb.Adornee = head
-                    bb.Size = UDim2.new(0, 100, 0, 30)
-                    bb.AlwaysOnTop = true
-                    bb.StudsOffset = Vector3.new(0, 3, 0)
+                local part = fruit:FindFirstChildWhichIsA("BasePart")
+                if part then
+                    local gui = Instance.new("BillboardGui")
+                    gui.Name = "MutationESP"
+                    gui.Adornee = part
+                    gui.Size = UDim2.new(0, 100, 0, 30)
+                    gui.AlwaysOnTop = true
+                    gui.StudsOffset = Vector3.new(0, 3, 0)
 
-                    local label = Instance.new("TextLabel", bb)
+                    local label = Instance.new("TextLabel")
                     label.Size = UDim2.new(1, 0, 1, 0)
                     label.BackgroundTransparency = 1
                     label.TextColor3 = Color3.fromRGB(255, 200, 0)
@@ -881,9 +883,10 @@ for _, plant in ipairs(plants:GetChildren()) do
                     label.Text = "[" .. mut .. "]"
                     label.Font = Enum.Font.GothamBold
                     label.TextScaled = true
+                    label.Parent = gui
 
-                    bb.Parent = head
-                    table.insert(currentESP, bb)
+                    gui.Parent = part
+                    table.insert(currentESP, gui)
                 end
             end
         end
@@ -892,14 +895,11 @@ end
 
 end
 
--- ESP Thread spawn(function() while true do if espEnabled and selectedMutationESP then drawMutationESP() else clearMutationESP() end task.wait(1) end end)
+--// ESP Watcher Loop RunService.Heartbeat:Connect(function() if espEnabled and selectedMutationESP then drawMutationESP() else clearESP() end end)
 
--- UI Integration (your custom system) esp:AddDropdown("mutationEspSelect", { Title = "Mutation ESP Selector", Description = "Choose a mutation to highlight", Values = mutationList, Multi = false, Default = nil }):OnChanged(function(value) selectedMutationESP = value print("[ESP] Mutation selected:", value) end)
+--// UI Hookup esp:AddDropdown("mutationEspSelect", { Title = "Mutation ESP Selector", Description = "Choose a mutation to highlight", Values = mutationList, Multi = false, Default = nil }):OnChanged(function(value) selectedMutationESP = value print("[ESP] Mutation selected:", value) end)
 
-esp:AddToggle("mutationEspToggle", { Title = "Enable Mutation ESP", Description = "Highlights fruits with selected mutation", Default = false, Callback = function(state) espEnabled = state print("[ESP] Enabled:", state) if not state then clearMutationESP() end end })
-
-
-
+esp:AddToggle("mutationEspToggle", { Title = "Enable Mutation ESP", Description = "Highlights fruits with selected mutation", Default = false, Callback = function(state) espEnabled = state print("[ESP] Enabled:", state) if not state then clearESP() end end })
 
 
 
