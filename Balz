@@ -275,79 +275,7 @@ function ufav()
     end
 end
 
--- Local Script --
-    
-    local pickup_delay = 0.1
-local pickup_radius = 10000
 
--- Section: Collect Plants
-local section = main:AddSection("Collect Plants")
-
--- Toggle: Stop if Backpack is Full
-local stopOnFull = false
-main:AddToggle("stopOnFullToggle", {
-    Title = "Stop if Backpack is Full",
-    Description = "Skips collection if backpack is full",
-    Default = false,
-    Callback = function(v)
-        stopOnFull = v
-        print("[DEBUG] stopOnFull set to:", v)
-    end
-})
-
--- Check Backpack
-local function isInventoryFull()
-    local hud = local_player:FindFirstChild("PlayerGui") and local_player.PlayerGui:FindFirstChild("HUD")
-    local stats = hud and hud:FindFirstChild("Stats")
-    if stats then
-        local cap = tonumber(stats:FindFirstChild("CapacityLabel") and stats.CapacityLabel.Text:match("%d+"))
-        local cur = tonumber(stats:FindFirstChild("FruitLabel") and stats.FruitLabel.Text:match("%d+"))
-        if cap and cur then
-            print("[DEBUG] Inventory check: ", cur, "/", cap)
-            return cur >= cap
-        end
-    end
-    print("[DEBUG] Inventory check failed (missing HUD/stats)")
-    return false
-end
-
--- Fruit Collector with debug
-local function collectFruits(filterFn, flagRef, label)
-    task.spawn(function()
-        print("[DEBUG] STARTED collection thread for", label)
-        while flagRef.enabled do
-            print("[DEBUG] Loop active for:", label)
-            for _, plant in next, farm.Important.Plants_Physical:GetChildren() do
-                byte_net_reliable:FireServer(buffer, { plant })
-                task.wait(pickup_delay)
-
-                local fruits = plant:FindFirstChild("Fruits", true)
-                if fruits then
-                    for _, fruit in next, fruits:GetChildren() do
-                        if not flagRef.enabled then
-                            print("[DEBUG] Flag disabled mid-loop, stopping:", label)
-                            return
-                        end
-
-                        if stopOnFull and isInventoryFull() then
-                            print("[DEBUG] Stopping collection: backpack full.")
-                            task.wait(1)
-                            break
-                        end
-
-                        if not filterFn or filterFn(fruit) then
-                            print("[DEBUG] Picking up:", fruit:GetAttribute("Name") or "Unknown")
-                            byte_net_reliable:FireServer(buffer, { fruit })
-                            task.wait(pickup_delay)
-                        end
-                    end
-                end
-            end
-            task.wait(0.2)
-        end
-        print("[DEBUG] STOPPED collection thread for", label)
-    end)
-end
 
 -- Collect All
 local allFlag = { enabled = false }
@@ -359,36 +287,7 @@ main:AddToggle("collectAllFruits", {
         allFlag.enabled = state
         print("[DEBUG] Auto Collect All toggle:", state)
         if state then
-            collectFruits(nil, allFlag, "All Fruits")
-        end
-    end
-})
-
--- Collect by Mutation
-local mutationList = {
-    "Ripe","Gold","Rainbow","Wet","Windstruck","Moonlit","Chilled","Bloodlit","Twisted","Frozen",
-    "Shocked","Celestial","Choc","Pollinated","Burnt","Verdant","HoneyGlazed","Plasma","Heavenly",
-    "Paradisal","Cooked","Zombified","Molten","Sundried","Alienlike","Galactic","Disco","Voidtouched","Dawnbound"
-}
-local selectedMutations = {}
-
-main:AddDropdown("mutationSelect", {
-    Title = "Select Mutations to Collect",
-    Description = "Only collects fruits with these mutations",
-    Values = mutationList,
-    Multi = true,
-    Default = {}
-}):OnChanged(function(selection)
-    selectedMutations = {}
-    for key, val in pairs(selection) do
-        if typeof(key) == "string" and val then
-            table.insert(selectedMutations, key)
-        end
-    end
-    print("[DEBUG] Selected Mutations:", table.concat(selectedMutations, ", "))
-end)
-
-local mutFlag = { enabled = false }
+ }
 main:AddToggle("collectMutations", {
     Title = "Auto Collect Mutated Fruits",
     Description = "Collects fruits with selected mutations",
@@ -406,50 +305,6 @@ main:AddToggle("collectMutations", {
 })
 
 -- Collect by Fruit Name
-local fruitNames = {
-    "Carrot","Strawberry","Blueberry","Tomato","Cauliflower","Watermelon","Green Apple","Avocado",
-    "Banana","Pineapple","Kiwi","Bell Pepper","Prickly Pear","Loquat","Feijoa","Sugar Apple",
-    "Plum","Blackberry","Durian","Mango","Dragon Fruit","Pear","Rambutan","Mangosteen",
-    "Coconut","Fig","Passion Fruit","Guava","Apple","Lime","Lemon","Orange","Peach","Cherry"
-}
-local selectedFruits = {}
-
-main:AddDropdown("fruitSelect", {
-    Title = "Select Fruit Types to Collect",
-    Description = "Only collects selected fruit types",
-    Values = fruitNames,
-    Multi = true,
-    Default = {}
-}):OnChanged(function(selection)
-    selectedFruits = {}
-    for key, val in pairs(selection) do
-        if typeof(key) == "string" and val then
-            table.insert(selectedFruits, key)
-        end
-    end
-    print("[DEBUG] Selected Fruits:", table.concat(selectedFruits, ", "))
-end)
-
-local fruitFlag = { enabled = false }
-main:AddToggle("collectSpecificFruits", {
-    Title = "Auto Collect Specific Fruits",
-    Description = "Collects fruits with selected names",
-    Default = false,
-    Callback = function(state)
-        fruitFlag.enabled = state
-        print("[DEBUG] Specific Fruits Toggle:", state)
-        if state then
-            collectFruits(function(fruit)
-                local name = fruit:GetAttribute("Name")
-                return name and table.find(selectedFruits, name)
-            end, fruitFlag, "Specific Fruits")
-        end
-    end
-})
-
-        
-
-
 
 
 
