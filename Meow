@@ -338,12 +338,17 @@ pet:AddToggle("collectAllFruits", {
 --// Services local Players = game:GetService("Players") local ReplicatedStorage = game:GetService("ReplicatedStorage") local RunService = game:GetService("RunService")
 
 --// Modules & Setup
-local player = Players.LocalPlayer local get_farm = require(ReplicatedStorage.Modules.GetFarm)
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+local player = Players.LocalPlayer
+
+local get_farm = require(ReplicatedStorage.Modules.GetFarm)
 local bufferLib = require(ReplicatedStorage.Modules.Buffer)
 local buffer = bufferLib("\1\1\0\1")
+
 local ByteNet = ReplicatedStorage:WaitForChild("ByteNetReliable")
 local farm = get_farm(player)
-
 --// Mutation List local mutationList = { "Ripe", "Gold", "Rainbow", "Wet", "Windstruck", "Moonlit", "Chilled", "Bloodlit", "Twisted", "Frozen", "Shocked", "Celestial", "Choc", "Pollinated", "Burnt", "Verdant", "HoneyGlazed", "Plasma", "Heavenly", "Paradisal", "Cooked", "Zombified", "Molten", "Sundried", "Alienlike", "Galactic", "Disco", "Voidtouched", "Dawnbound" }
 
 --// ESP State local selectedMutationESP = nil local espEnabled = false local currentESP = {}
