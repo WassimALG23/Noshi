@@ -337,6 +337,87 @@ pet:AddToggle("collectAllFruits", {
 
 
 
+
+-- ✅ FINAL MUTATION ESP WITH MULTI-SELECTION + WEIGHT DISPLAY
+
+--// Services local Players = game:GetService("Players") local ReplicatedStorage = game:GetService("ReplicatedStorage") local RunService = game:GetService("RunService")
+
+--// References local player = Players.LocalPlayer local get_farm = require(ReplicatedStorage.Modules.GetFarm) local buffer = require(ReplicatedStorage.Modules.Buffer)("\1\1\0\1") local ByteNet = ReplicatedStorage:WaitForChild("ByteNetReliable") local farm = get_farm(player)
+
+--// State local selectedMutationsESP = {} local mutationESPEnabled = false local activeESP = {}
+
+--// Mutation list local mutationList = { "Ripe","Gold","Rainbow","Wet","Windstruck","Moonlit","Chilled","Bloodlit","Twisted","Frozen", "Shocked","Celestial","Choc","Pollinated","Burnt","Verdant","HoneyGlazed","Plasma","Heavenly", "Paradisal","Cooked","Zombified","Molten","Sundried","Alienlike","Galactic","Disco","Voidtouched","Dawnbound" }
+
+--// ESP Functions local function clearESP() for _, v in pairs(activeESP) do if v and v.Destroy then pcall(function() v:Destroy() end) end end table.clear(activeESP) end
+
+local function drawMutationESP() if not farm then return end local plants = farm:FindFirstChild("Important") and farm.Important:FindFirstChild("Plants_Physical") if not plants then return end
+
+clearESP()
+
+for _, plant in pairs(plants:GetChildren()) do
+    local fruits = plant:FindFirstChild("Fruits")
+    if fruits then
+        for _, fruit in pairs(fruits:GetChildren()) do
+            local mutation = fruit:GetAttribute("Mutation")
+            if mutation and table.find(selectedMutationsESP, mutation) then
+                local part = fruit:FindFirstChildWhichIsA("BasePart")
+                local weight = fruit:FindFirstChild("Weight")
+                local weightText = weight and string.format("%.2fkg", weight.Value) or "??kg"
+
+                if part then
+                    local bb = Instance.new("BillboardGui")
+                    bb.Name = "MutationESP"
+                    bb.Adornee = part
+                    bb.Size = UDim2.new(0, 120, 0, 36)
+                    bb.AlwaysOnTop = true
+                    bb.StudsOffset = Vector3.new(0, 3, 0)
+
+                    local label = Instance.new("TextLabel")
+                    label.Size = UDim2.new(1, 0, 1, 0)
+                    label.BackgroundTransparency = 1
+                    label.TextColor3 = Color3.fromRGB(255, 200, 0)
+                    label.TextStrokeTransparency = 0.5
+                    label.Text = "[" .. mutation .. "]  |  " .. weightText
+                    label.Font = Enum.Font.GothamBold
+                    label.TextScaled = true
+                    label.Parent = bb
+
+                    bb.Parent = part
+                    table.insert(activeESP, bb)
+                end
+            end
+        end
+    end
+end
+
+end
+
+--// ESP Live Update RunService.Heartbeat:Connect(function() if mutationESPEnabled and #selectedMutationsESP > 0 then drawMutationESP() else clearESP() end end)
+
+--// UI Elements pet:AddDropdown("mutationESPDropdown", { Title = "Select Mutations for ESP", Description = "Highlights fruits with the selected mutations", Values = mutationList, Multi = true, Default = {} }):OnChanged(function(selection) selectedMutationsESP = {} for key, val in pairs(selection) do if typeof(key) == "string" and val == true then table.insert(selectedMutationsESP, key) end end print("[ESP] Selected mutations:", table.concat(selectedMutationsESP, ", ")) end)
+
+pet:AddToggle("mutationESPToggle", { Title = "Enable Mutation ESP", Description = "Show labels for selected mutation fruits", Default = false, Callback = function(state) mutationESPEnabled = state print("[ESP] Enabled:", state) if not state then clearESP() end end })
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 local section = shop:AddSection("Seeds")
 
 shop:AddToggle("", {
