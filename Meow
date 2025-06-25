@@ -394,9 +394,9 @@ end
 
 --// ESP Live Update RunService.Heartbeat:Connect(function() if mutationESPEnabled and #selectedMutationsESP > 0 then drawMutationESP() else clearESP() end end)
 
---// UI Elements pet:AddDropdown("mutationESPDropdown", { Title = "Select Mutations for ESP", Description = "Highlights fruits with the selected mutations", Values = mutationList, Multi = true, Default = {} }):OnChanged(function(selection) selectedMutationsESP = {} for key, val in pairs(selection) do if typeof(key) == "string" and val == true then table.insert(selectedMutationsESP, key) end end print("[ESP] Selected mutations:", table.concat(selectedMutationsESP, ", ")) end)
+--// UI Elements ui:AddDropdown("mutationESPDropdown", { Title = "Select Mutations for ESP", Description = "Highlights fruits with the selected mutations", Values = mutationList, Multi = true, Default = {} }):OnChanged(function(selection) selectedMutationsESP = {} for key, val in pairs(selection) do if typeof(key) == "string" and val == true then table.insert(selectedMutationsESP, key) end end print("[ESP] Selected mutations:", table.concat(selectedMutationsESP, ", ")) end)
 
-pet:AddToggle("mutationESPToggle", { Title = "Enable Mutation ESP", Description = "Show labels for selected mutation fruits", Default = false, Callback = function(state) mutationESPEnabled = state print("[ESP] Enabled:", state) if not state then clearESP() end end })
+ui:AddToggle("mutationESPToggle", { Title = "Enable Mutation ESP", Description = "Show labels for selected mutation fruits", Default = false, Callback = function(state) mutationESPEnabled = state print("[ESP] Enabled:", state) if not state then clearESP() end end })
 
 
 
