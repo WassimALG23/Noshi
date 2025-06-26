@@ -99,7 +99,7 @@ local ui = Window:AddTab({
         Icon = "scroll"
     })
 
-local player = Window:AddTab({
+local playertab = Window:AddTab({
         Title = "Player",
         Icon = "user"
     })
@@ -397,7 +397,7 @@ end
 
 
 
-function pollinated(toggle)
+local function pollinated(toggle)
     ativo = toggle
     if not toggle then return end
         local rs = game:GetService("ReplicatedStorage")
@@ -771,7 +771,7 @@ SellSection:AddButton({
 
 --
 
-player:AddInput("WalkSpeedInput", {
+playertab:AddInput("WalkSpeedInput", {
     Title = "WalkSpeed",
     Description = "Enter your desired walk speed",
     Placeholder = "Example: 100",
