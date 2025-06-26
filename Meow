@@ -70,7 +70,7 @@ local Window = Fluent:CreateWindow({
 
 local main = Window:AddTab({
     Title = "main",
-    Icon = "house"
+    Icon = "warehouse"
 })
 
 local shop = Window:AddTab({
@@ -145,6 +145,21 @@ local fruitNames = {
     "Dandelion","Bee Balm","Crocus","Succulent","Bendboo","Violet Corn",
     "Cocovine","Suncoil"
 }
+
+local petNames = {
+    "Bear Bee", "Bee", "Black Bunny", "Blood Hedgehog", "Blood Kiwi", "Blood Owl",
+    "Brown Mouse", "Bunny", "Butterfly", "Capybara", "Cat", "Caterpillar", "Chicken",
+    "Chicken Zombie", "Cooked Owl", "Cow", "Crab", "Deer", "Disco Bee", "Dog", "Doge",
+    "Dragonfly", "Echo Frog", "Firefly", "Flamingo", "Frog", "Giant Ant", "Golden Bee",
+    "Golden Lab", "Grey Mouse", "Hedgehog", "Honey Bee", "Kiwi", "Mimic Octopus",
+    "Mole", "Monkey", "Moon Cat", "Moth", "Night Owl", "Orange Tabby", "Orangutan",
+    "Ostrich", "Owl", "Pack Bee", "Panda", "Peacock", "Petal Bee", "Pig", "Polar Bear",
+    "Praying Mantis", "Queen Bee", "Raccoon", "Red Dragon", "Red Fox",
+    "Red Giant Ant", "Rooster", "Scarlet Macaw", "Sea Otter", "Sea Turtle", "Seagull",
+    "Seal", "Silver Monkey", "Snail", "Spotted Deer", "Squirrel", "Starfish",
+    "Tarantula Hawk", "Toucan", "Turtle", "Wasp"
+}
+
 
 --[[ old
 local byallseed = {"Carrot", "Strawberry", "Blueberry", "Orange Tulip", "Tomato", "Corn", "Daffodil", "Watermelon", "Pumpkin", "Apple", "Bamboo", "Coconut", "Cactus", "Dragon Fruit", "Mango", "Grape", "Mushroom", "Pepper", "Cacao", "Beanstalk", "Ember Lily", "Sugar Apple"}
@@ -272,65 +287,280 @@ function ufav()
     end
 end
 
--- Local Script --
-    
-    local pickup_delay = 0.05
-local pickup_radius = 10000
+function sellpets()
+game:GetService("ReplicatedStorage"):WaitForChild("GameEvents"):WaitForChild("SellPet_RE"):FireServer()
+end
 
--- Section: Collect Plants
-local section = pet:AddSection("Collect Plants")
 
--- Check Backpack
+function setplace()
+local currentPos = hrp.Position
+        local fixedY = 0.13552513718605042
 
--- Fruit Collector with debug
-local function collectFruits(filterFn, flagRef, label)
-    task.spawn(function()
-        print("[DEBUG] STARTED collection thread for", label)
-        while flagRef.enabled do
-            print("[DEBUG] Loop active for:", label)
-            for _, plant in next, farm.Important.Plants_Physical:GetChildren() do
-                byte_net_reliable:FireServer(buffer, { plant })
-                task.wait(pickup_delay)
+        x = Vector3.new(currentPos.X, fixedY, currentPos.Z)
+        y = Vector3.new(currentPos.X, fixedY, currentPos.Z)
 
-                local fruits = plant:FindFirstChild("Fruits", true)
-                if fruits then
-                    for _, fruit in next, fruits:GetChildren() do
-                        if not flagRef.enabled then
-                            print("[DEBUG] Flag disabled mid-loop, stopping:", label)
-                            return
+        print("Start (X) and End (Y) positions set to:", x)
+    end
+
+function plantdistance()
+
+local num = tonumber(input)
+        if num then
+            step = num
+            print("Step set to:", step)
+        else
+            warn("Invalid number entered for step.")
+        end
+    end
+
+
+
+function plantfr()
+local player = game.Players.LocalPlayer
+        local tool = player.Character and player.Character:FindFirstChildOfClass("Tool")
+        if not tool then return end
+
+        local baseName = tool.Name:match("^(.-)%s+[Ss]eed") or tool.Name
+        baseName = baseName:gsub("%s+$", "")
+
+        if not x or not y then
+            warn("❌ Please set both X and Y positions first!")
+            return
+        end
+
+        local direction = (y - x).Unit
+        local distance = (y - x).Magnitude
+
+        for i = 0, distance, step do
+            local pos = x + direction * i
+
+            local args = {
+                Vector3.new(pos.X, pos.Y, pos.Z), -- vector.create equivalent
+                baseName
+            }
+
+            game:GetService("ReplicatedStorage"):WaitForChild("GameEvents"):WaitForChild("Plant_RE"):FireServer(unpack(args))
+            task.wait()
+        end
+    end
+
+function sellpetssel()
+
+autoSellEnabled = state
+        if state then
+            task.spawn(function()
+        local Players = game:GetService("Players")
+                local ReplicatedStorage = game:GetService("ReplicatedStorage")
+                local SellEvent = ReplicatedStorage:WaitForChild("GameEvents"):WaitForChild("SellPet_RE")
+                local player = Players.LocalPlayer
+
+                while autoSellEnabled do
+                    local containers = { player.Backpack, player.Character }
+                    for _, container in ipairs(containers) do
+                        for _, tool in ipairs(container:GetChildren()) do
+                            if tool:IsA("Tool") then
+                                local rawName = tool.Name
+                                local strippedName = rawName:match("^(.-)%s*%(") or rawName -- remove (age:xx,xxkg)
+                                
+                                for _, allowedName in ipairs(selectedPetsToSell) do
+                                    if strippedName == allowedName then
+                                        local humanoid = player.Character and player.Character:FindFirstChildOfClass("Humanoid")
+                                        if humanoid then
+                                            humanoid:EquipTool(tool)
+                                            task.wait(0.2)
+                                            SellEvent:FireServer()
+                                            print("✅ Sold:", rawName)
+                                            task.wait(5)
+                                        end
+                                    end
+                                end
+                            end
                         end
+                    end
 
-                        if stopOnFull and isInventoryFull() then
-                            print("[DEBUG] Stopping collection: backpack full.")
-                            task.wait(1)
-                            break
-                        end
+                    task.wait(1)
+                end
+            end)
+        end
+    end
+)
+end
 
-                        if not filterFn or filterFn(fruit) then
-                            print("[DEBUG] Picking up:", fruit:GetAttribute("Name") or "Unknown")
-                            byte_net_reliable:FireServer(buffer, { fruit })
-                            task.wait(pickup_delay)
+
+function feedpet()
+autoFeed = Value
+        if Value then
+            spawn(function()
+                while autoFeed do
+                    if pfeed then
+                        feedsc:FireServer("Feed", pfeed)
+                        print("pet:", pfeed)
+                    else
+                        print("no pets are selected")
+                    end
+                    wait(0.3) 
+                end
+            end)
+        end
+    end
+
+
+
+
+function pollinated()
+
+        ativo = toggle
+        if not toggle then return end
+
+        local player = game:GetService("Players").LocalPlayer
+        local rs = game:GetService("ReplicatedStorage")
+
+        local function temPollinated(nome)
+            return nome:lower():find("pollinated") ~= nil
+        end
+
+        -- Atualiza a lista de itens ordenados por peso
+        task.spawn(function()
+            while ativo do
+                local novaLista = {}
+                local char = player.Character or player.CharacterAdded:Wait()
+                local mochila = player:FindFirstChild("Backpack")
+
+                for _, container in ipairs({char, mochila}) do
+                    if container then
+                        for _, item in ipairs(container:GetChildren()) do
+                            if item:IsA("Tool") and temPollinated(item.Name) then
+                                local weightObj = item:FindFirstChild("Weight")
+                                if weightObj and weightObj:IsA("NumberValue") then
+                                    table.insert(novaLista, {Tool = item, Weight = weightObj.Value})
+                                end
+                            end
                         end
                     end
                 end
+
+                table.sort(novaLista, function(a, b)
+                    return a.Weight < b.Weight
+                end)
+
+                itensOrdenados = novaLista
+                task.wait(2)
             end
-            task.wait(0.2)
+        end)
+
+        -- Interação com a máquina
+        task.spawn(function()
+            while ativo do
+                local char = player.Character or player.CharacterAdded:Wait()
+                local humanoid = char:FindFirstChildOfClass("Humanoid")
+                local label
+
+                pcall(function()
+                    label = workspace.HoneyEvent.HoneyCombpressor.Sign.SurfaceGui.TextLabel
+                end)
+
+                local listaLocal = table.clone(itensOrdenados)
+
+                for _, itemData in ipairs(listaLocal) do
+                    if not ativo then break end
+                    local tool = itemData.Tool
+                    if tool and tool.Parent and label then
+                        local texto = label.Text
+                        if texto == "READY" or texto:match("^%d*%.?%d+/10 KG$") then
+
+                            if tool.Parent == player.Backpack or tool.Parent == player.Character then
+                                local sucesso, erro = pcall(function()
+                                    humanoid:EquipTool(tool)
+                                end)
+
+                                if sucesso then
+                                    task.wait(0.1)
+                                    ufav()
+                                    rs.GameEvents.HoneyMachineService_RE:FireServer("MachineInteract")
+                                    task.wait(0.6)
+                                end
+                            end
+
+                        end
+                    end
+                end
+
+                task.wait(0.5)
+            end
+        end)
+    end
+
+
+-- local script 
+
+
+-- Services & Setup
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local LocalPlayer = Players.LocalPlayer
+local buffer = require(ReplicatedStorage.Modules.Buffer)("\1\1\0\1")
+
+-- Get player's farm
+local function GetMyFarm()
+    for _, farm in ipairs(workspace.Farm:GetChildren()) do
+        local important = farm:FindFirstChild("Important")
+        local data = important and important:FindFirstChild("Data")
+        local owner = data and data:FindFirstChild("Owner")
+        if owner and owner.Value == LocalPlayer.Name then
+            return farm
         end
-        print("[DEBUG] STOPPED collection thread for", label)
-    end)
+    end
+    return nil
 end
 
--- Collect All
-local allFlag = { enabled = false }
-pet:AddToggle("collectAllFruits", {
+-- Get harvestable plants
+local function GetHarvestablePlants()
+    local character = LocalPlayer.Character
+    if not character then return {} end
+
+    local root = GetMyFarm()
+    if not root then return {} end
+
+    local plantFolder = root.Important:FindFirstChild("Plants_Physical")
+    if not plantFolder then return {} end
+
+    local plants = {}
+
+    for _, model in pairs(plantFolder:GetDescendants()) do
+        if model:IsA("ProximityPrompt") and model.Enabled then
+            local parent = model.Parent
+            table.insert(plants, parent.Parent)
+        end
+    end
+
+    return plants
+end
+
+-- Harvest plants
+local function HarvestPlants()
+    for _, plantModel in ipairs(GetHarvestablePlants()) do
+        pcall(function()
+            ReplicatedStorage.ByteNetReliable:FireServer(buffer, { plantModel })
+        end)
+    end
+end
+
+-- UI Toggle
+local autoCollectEnabled = false
+local collectsection = main:AddSection("auto collect")
+collectsection:AddToggle("autoCollectFruits", {
     Title = "Auto Collect All Fruits",
-    Description = "Collects every fruit",
+    Description = "auto collect",
     Default = false,
     Callback = function(state)
-        allFlag.enabled = state
-        print("[DEBUG] Auto Collect All toggle:", state)
+        autoCollectEnabled = state
         if state then
-            collectFruits(nil, allFlag, "All Fruits")
+            task.spawn(function()
+                while autoCollectEnabled do
+                    HarvestPlants()
+                    task.wait(1.5) -- adjust collection speed
+                end
+            end)
         end
     end
 })
@@ -340,65 +570,23 @@ pet:AddToggle("collectAllFruits", {
 
 
 
--- ✅ FINAL MUTATION ESP WITH MULTI-SELECTION + WEIGHT DISPLAY
 
---// Services local Players = game:GetService("Players") local ReplicatedStorage = game:GetService("ReplicatedStorage") local RunService = game:GetService("RunService")
 
---// References local player = Players.LocalPlayer local get_farm = require(ReplicatedStorage.Modules.GetFarm) local buffer = require(ReplicatedStorage.Modules.Buffer)("\1\1\0\1") local ByteNet = ReplicatedStorage:WaitForChild("ByteNetReliable") local farm = get_farm(player)
 
---// State local selectedMutationsESP = {} local mutationESPEnabled = false local activeESP = {}
 
---// Mutation list local mutationList = { "Ripe","Gold","Rainbow","Wet","Windstruck","Moonlit","Chilled","Bloodlit","Twisted","Frozen", "Shocked","Celestial","Choc","Pollinated","Burnt","Verdant","HoneyGlazed","Plasma","Heavenly", "Paradisal","Cooked","Zombified","Molten","Sundried","Alienlike","Galactic","Disco","Voidtouched","Dawnbound" }
 
---// ESP Functions local function clearESP() for _, v in pairs(activeESP) do if v and v.Destroy then pcall(function() v:Destroy() end) end end table.clear(activeESP) end
 
-local function drawMutationESP() if not farm then return end local plants = farm:FindFirstChild("Important") and farm.Important:FindFirstChild("Plants_Physical") if not plants then return end
 
-clearESP()
 
-for _, plant in pairs(plants:GetChildren()) do
-    local fruits = plant:FindFirstChild("Fruits")
-    if fruits then
-        for _, fruit in pairs(fruits:GetChildren()) do
-            local mutation = fruit:GetAttribute("Mutation")
-            if mutation and table.find(selectedMutationsESP, mutation) then
-                local part = fruit:FindFirstChildWhichIsA("BasePart")
-                local weight = fruit:FindFirstChild("Weight")
-                local weightText = weight and string.format("%.2fkg", weight.Value) or "??kg"
 
-                if part then
-                    local bb = Instance.new("BillboardGui")
-                    bb.Name = "MutationESP"
-                    bb.Adornee = part
-                    bb.Size = UDim2.new(0, 120, 0, 36)
-                    bb.AlwaysOnTop = true
-                    bb.StudsOffset = Vector3.new(0, 3, 0)
 
-                    local label = Instance.new("TextLabel")
-                    label.Size = UDim2.new(1, 0, 1, 0)
-                    label.BackgroundTransparency = 1
-                    label.TextColor3 = Color3.fromRGB(255, 200, 0)
-                    label.TextStrokeTransparency = 0.5
-                    label.Text = "[" .. mutation .. "]  |  " .. weightText
-                    label.Font = Enum.Font.GothamBold
-                    label.TextScaled = true
-                    label.Parent = bb
 
-                    bb.Parent = part
-                    table.insert(activeESP, bb)
-                end
-            end
-        end
-    end
-end
 
-end
 
---// ESP Live Update RunService.Heartbeat:Connect(function() if mutationESPEnabled and #selectedMutationsESP > 0 then drawMutationESP() else clearESP() end end)
 
---// UI Elements ui:AddDropdown("mutationESPDropdown", { Title = "Select Mutations for ESP", Description = "Highlights fruits with the selected mutations", Values = mutationList, Multi = true, Default = {} }):OnChanged(function(selection) selectedMutationsESP = {} for key, val in pairs(selection) do if typeof(key) == "string" and val == true then table.insert(selectedMutationsESP, key) end end print("[ESP] Selected mutations:", table.concat(selectedMutationsESP, ", ")) end)
 
-ui:AddToggle("mutationESPToggle", { Title = "Enable Mutation ESP", Description = "Show labels for selected mutation fruits", Default = false, Callback = function(state) mutationESPEnabled = state print("[ESP] Enabled:", state) if not state then clearESP() end end })
+
+
 
 
 
@@ -518,76 +706,37 @@ plant:AddButton({
     Title = "Set Plant position",
     Description = "Click to set both X and Y to current position",
     Callback = function()
-        local currentPos = hrp.Position
-        local fixedY = 0.13552513718605042
-
-        x = Vector3.new(currentPos.X, fixedY, currentPos.Z)
-        y = Vector3.new(currentPos.X, fixedY, currentPos.Z)
-
-        print("Start (X) and End (Y) positions set to:", x)
-    end
+        setplace()
 })
 
 local Slider = plant:AddInput("StepInput", {
-    Title = "Step Between Seeds",
+    Title = "distance Between Seeds",
     Description = "Enter the distance between the seeds (e.g., 0.005)",
     Placeholder = "1",
     Default = "1",
     Numeric = true,
     Callback = function(input)
-        local num = tonumber(input)
-        if num then
-            step = num
-            print("Step set to:", step)
-        else
-            warn("Invalid number entered for step.")
-        end
-    end
+        plantdistance()
 })
 plant:AddButton({
     Title = "Click to Plant",
     Description = "Make sure you're holding a seed/tool",
     -- optional, use your global icon if you want
     Callback = function()
-        local player = game.Players.LocalPlayer
-        local tool = player.Character and player.Character:FindFirstChildOfClass("Tool")
-        if not tool then return end
-
-        local baseName = tool.Name:match("^(.-)%s+[Ss]eed") or tool.Name
-        baseName = baseName:gsub("%s+$", "")
-
-        if not x or not y then
-            warn("❌ Please set both X and Y positions first!")
-            return
-        end
-
-        local direction = (y - x).Unit
-        local distance = (y - x).Magnitude
-
-        for i = 0, distance, step do
-            local pos = x + direction * i
-
-            local args = {
-                Vector3.new(pos.X, pos.Y, pos.Z), -- vector.create equivalent
-                baseName
-            }
-
-            game:GetService("ReplicatedStorage"):WaitForChild("GameEvents"):WaitForChild("Plant_RE"):FireServer(unpack(args))
-            task.wait()
-        end
-    end
+        plantfr()
 })
 
 --
+local SellSection = main:AddSection("Sell")
 
-sell:AddButton({
+SellSection:AddButton({
     Title = "Sell all",
     Description = "sell all fruits in ur inventory",
     Callback = function()
         tsf()       
     end
 })
-sell:AddButton({
+SellSection:AddButton({
     Title = "sell in hand",
     Description= "sells the fruit ur holding",
     Callback = function()
@@ -595,30 +744,12 @@ bbf()
 end
 })
 
-sell:AddSection("pets")
 
--- List of all pet names
-local petNames = {
-    "Bear Bee", "Bee", "Black Bunny", "Blood Hedgehog", "Blood Kiwi", "Blood Owl",
-    "Brown Mouse", "Bunny", "Butterfly", "Capybara", "Cat", "Caterpillar", "Chicken",
-    "Chicken Zombie", "Cooked Owl", "Cow", "Crab", "Deer", "Disco Bee", "Dog", "Doge",
-    "Dragonfly", "Echo Frog", "Firefly", "Flamingo", "Frog", "Giant Ant", "Golden Bee",
-    "Golden Lab", "Grey Mouse", "Hedgehog", "Honey Bee", "Kiwi", "Mimic Octopus",
-    "Mole", "Monkey", "Moon Cat", "Moth", "Night Owl", "Orange Tabby", "Orangutan",
-    "Ostrich", "Owl", "Pack Bee", "Panda", "Peacock", "Petal Bee", "Pig", "Polar Bear",
-    "Praying Mantis", "Queen Bee", "Raccoon", "Red Dragon", "Red Fox",
-    "Red Giant Ant", "Rooster", "Scarlet Macaw", "Sea Otter", "Sea Turtle", "Seagull",
-    "Seal", "Silver Monkey", "Snail", "Spotted Deer", "Squirrel", "Starfish",
-    "Tarantula Hawk", "Toucan", "Turtle", "Wasp"
-}
-
--- Store selected pet names
 local selectedPetsToSell = {}
 
--- Dropdown to select pets
 sell:AddDropdown("PetsToSellDropdown", {
     Title = "Select pets to auto-sell",
-    Description = "select pets",
+    Description = "Only exact pet names (ignores age/weight)",
     Values = petNames,
     Multi = true,
     Default = {}
@@ -631,53 +762,24 @@ sell:AddDropdown("PetsToSellDropdown", {
     end
 end)
 
--- Toggle for auto selling
 local autoSellEnabled = false
 
-sell:AddToggle("EnableAutoSellPets", {
+SellSection:AddToggle("EnableAutoSellPets", {
     Title = "Auto Sell Selected Pets",
-    Description = "Scans and sells selected pets (5s delay)",
+    Description = "Matches exact pet name only (ignores weight/age)",
     Default = false,
     Callback = function(state)
-        autoSellEnabled = state
-        if state then
-            task.spawn(function()
-                while autoSellEnabled do
-                    local player = game:GetService("Players").LocalPlayer
-                    local containers = { player.Backpack, player.Character }
-
-                    for _, container in ipairs(containers) do
-                        for _, tool in ipairs(container:GetChildren()) do
-                            if tool:IsA("Tool") then
-                                for _, petName in ipairs(selectedPetsToSell) do
-                                    if tool.Name:lower():find(petName:lower(), 1, true) then
-                                        local humanoid = player.Character and player.Character:FindFirstChildOfClass("Humanoid")
-                                        if humanoid then
-                                            humanoid:EquipTool(tool)
-                                            task.wait(0.2)
-                                            game:GetService("ReplicatedStorage"):WaitForChild("GameEvents"):WaitForChild("SellPet_RE"):FireServer()
-                                            print("Sold:", tool.Name)
-                                            task.wait(5)
-                                        end
-                                    end
-                                end
-                            end
-                        end
-                    end
-
-                    task.wait(1) -- wait before checking again
-                end
-            end)
-        end
-    end
+        sellpetssel()
 })
 
 
-sell:AddButton({
+
+
+SellSection:AddButton({
     Title = "Sell Pet",
     Description = "Sells the pet you're holding",
     Callback = function()
-        game:GetService("ReplicatedStorage"):WaitForChild("GameEvents"):WaitForChild("SellPet_RE"):FireServer()
+        sellpets()
     end
 })
 
@@ -760,21 +862,7 @@ pet:AddToggle("AutoFeedToggle", {
     Description = "feeds the pet with the fruit in ur hand",
     Default = false,
     Callback = function(Value)
-        autoFeed = Value
-        if Value then
-            spawn(function()
-                while autoFeed do
-                    if pfeed then
-                        feedsc:FireServer("Feed", pfeed)
-                        print("pet:", pfeed)
-                    else
-                        print("no pets are selected")
-                    end
-                    wait(0.3) 
-                end
-            end)
-        end
-    end
+        feedpet()
 })
 
 pet:AddButton({
@@ -1038,86 +1126,7 @@ event:AddToggle("auto give pollinated fruit", {
     Description = "Equip only Pollinated items and interact with the event machine (sorted by weight)",
     Default = false,
     Callback = function(toggle)
-        ativo = toggle
-        if not toggle then return end
-
-        local player = game:GetService("Players").LocalPlayer
-        local rs = game:GetService("ReplicatedStorage")
-
-        local function temPollinated(nome)
-            return nome:lower():find("pollinated") ~= nil
-        end
-
-        -- Atualiza a lista de itens ordenados por peso
-        task.spawn(function()
-            while ativo do
-                local novaLista = {}
-                local char = player.Character or player.CharacterAdded:Wait()
-                local mochila = player:FindFirstChild("Backpack")
-
-                for _, container in ipairs({char, mochila}) do
-                    if container then
-                        for _, item in ipairs(container:GetChildren()) do
-                            if item:IsA("Tool") and temPollinated(item.Name) then
-                                local weightObj = item:FindFirstChild("Weight")
-                                if weightObj and weightObj:IsA("NumberValue") then
-                                    table.insert(novaLista, {Tool = item, Weight = weightObj.Value})
-                                end
-                            end
-                        end
-                    end
-                end
-
-                table.sort(novaLista, function(a, b)
-                    return a.Weight < b.Weight
-                end)
-
-                itensOrdenados = novaLista
-                task.wait(2)
-            end
-        end)
-
-        -- Interação com a máquina
-        task.spawn(function()
-            while ativo do
-                local char = player.Character or player.CharacterAdded:Wait()
-                local humanoid = char:FindFirstChildOfClass("Humanoid")
-                local label
-
-                pcall(function()
-                    label = workspace.HoneyEvent.HoneyCombpressor.Sign.SurfaceGui.TextLabel
-                end)
-
-                local listaLocal = table.clone(itensOrdenados)
-
-                for _, itemData in ipairs(listaLocal) do
-                    if not ativo then break end
-                    local tool = itemData.Tool
-                    if tool and tool.Parent and label then
-                        local texto = label.Text
-                        if texto == "READY" or texto:match("^%d*%.?%d+/10 KG$") then
-
-                            if tool.Parent == player.Backpack or tool.Parent == player.Character then
-                                local sucesso, erro = pcall(function()
-                                    humanoid:EquipTool(tool)
-                                end)
-
-                                if sucesso then
-                                    task.wait(0.1)
-                                    ufav()
-                                    rs.GameEvents.HoneyMachineService_RE:FireServer("MachineInteract")
-                                    task.wait(0.6)
-                                end
-                            end
-
-                        end
-                    end
-                end
-
-                task.wait(0.5)
-            end
-        end)
-    end
+pollinated()
 })
 
 event:AddButton({
