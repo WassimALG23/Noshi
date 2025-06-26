@@ -88,19 +88,25 @@ local sell = Window:AddTab({
     Icon = "banknote"
 })
 
-local player = Window:AddTab({
-        Title = "Player",
-        Icon = "user"
-    })
 
 local pet = Window:AddTab({
         Title = "pet",
         Icon = "bone"
     })
 
+local event = Window:AddTab({
+    Title = "Events",
+    Icon = "calendar"
+})
+
 local ui = Window:AddTab({
         Title = "UIs",
         Icon = "scroll"
+    })
+
+local player = Window:AddTab({
+        Title = "Player",
+        Icon = "user"
     })
 
 local vuln = Window:AddTab({
@@ -108,10 +114,6 @@ local vuln = Window:AddTab({
         Icon = "list"
     })
 
-local event = Window:AddTab({
-    Title = "Events",
-    Icon = "calendar"
-})
 
 local config = Window:AddTab({
     Title = "config",
