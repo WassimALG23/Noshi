@@ -397,10 +397,9 @@ end
 
 
 
-function pollinated()
-
-        ativo = toggle
-        if not toggle then return end
+function pollinated(toggle)
+    ativo = toggle
+    if not toggle then return end
         local rs = game:GetService("ReplicatedStorage")
 
         local function temPollinated(nome)
