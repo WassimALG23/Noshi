@@ -272,7 +272,6 @@ function tsm()
 end
 
 function ufav()
-    local player = game:GetService("Players").LocalPlayer
     local char = player.Character
     local backpack = player.Backpack
     local tool = char:FindFirstChildOfClass("Tool") or backpack:FindFirstChildOfClass("Tool")
@@ -311,7 +310,7 @@ local num = tonumber(input)
 
 
 function plantfr()
-local player = game.Players.LocalPlayer
+
         local tool = player.Character and player.Character:FindFirstChildOfClass("Tool")
         if not tool then return end
 
@@ -339,65 +338,61 @@ local player = game.Players.LocalPlayer
         end
     end
 
-function sellpetssel()
+function sellpetssel(state)
+    autoSellEnabled = state
+    if state then
+        task.spawn(function()
+            local ReplicatedStorage = game:GetService("ReplicatedStorage")
+            local SellEvent = ReplicatedStorage:WaitForChild("GameEvents"):WaitForChild("SellPet_RE")
 
-autoSellEnabled = state
-        if state then
-            task.spawn(function()
-        local Players = game:GetService("Players")
-                local ReplicatedStorage = game:GetService("ReplicatedStorage")
-                local SellEvent = ReplicatedStorage:WaitForChild("GameEvents"):WaitForChild("SellPet_RE")
-                local player = Players.LocalPlayer
+            while autoSellEnabled do
+                local containers = { player.Backpack, player.Character }
+                for _, container in ipairs(containers) do
+                    for _, tool in ipairs(container:GetChildren()) do
+                        if tool:IsA("Tool") then
+                            local rawName = tool.Name
+                            local strippedName = rawName:match("^(.-)%s*%(") or rawName -- remove (age:xx,xxkg)
 
-                while autoSellEnabled do
-                    local containers = { player.Backpack, player.Character }
-                    for _, container in ipairs(containers) do
-                        for _, tool in ipairs(container:GetChildren()) do
-                            if tool:IsA("Tool") then
-                                local rawName = tool.Name
-                                local strippedName = rawName:match("^(.-)%s*%(") or rawName -- remove (age:xx,xxkg)
-                                
-                                for _, allowedName in ipairs(selectedPetsToSell) do
-                                    if strippedName == allowedName then
-                                        local humanoid = player.Character and player.Character:FindFirstChildOfClass("Humanoid")
-                                        if humanoid then
-                                            humanoid:EquipTool(tool)
-                                            task.wait(0.2)
-                                            SellEvent:FireServer()
-                                            print("✅ Sold:", rawName)
-                                            task.wait(5)
-                                        end
+                            for _, allowedName in ipairs(selectedPetsToSell) do
+                                if strippedName == allowedName then
+                                    local humanoid = player.Character and player.Character:FindFirstChildOfClass("Humanoid")
+                                    if humanoid then
+                                        humanoid:EquipTool(tool)
+                                        task.wait(0.2)
+                                        SellEvent:FireServer()
+                                        print("✅ Sold:", rawName)
+                                        task.wait(5)
                                     end
                                 end
                             end
                         end
                     end
-
-                    task.wait(1)
                 end
-            end)
-        end
+                task.wait(1)
+            end
+        end)
     end
-)
 end
 
 
-function feedpet()
-autoFeed = Value
-        if Value then
-            spawn(function()
-                while autoFeed do
-                    if pfeed then
-                        feedsc:FireServer("Feed", pfeed)
-                        print("pet:", pfeed)
-                    else
-                        print("no pets are selected")
-                    end
-                    wait(0.3) 
+function feedpet(Value)
+    autoFeed = Value
+    if Value then
+        spawn(function()
+            while autoFeed do
+                if pfeed then
+                    feedsc:FireServer("Feed", pfeed)
+                    print("pet:", pfeed)
+                else
+                    print("no pets are selected")
                 end
-            end)
-        end
+                wait(0.3)
+            end
+        end)
     end
+end
+
+                    
 
 
 
@@ -406,8 +401,6 @@ function pollinated()
 
         ativo = toggle
         if not toggle then return end
-
-        local player = game:GetService("Players").LocalPlayer
         local rs = game:GetService("ReplicatedStorage")
 
         local function temPollinated(nome)
@@ -856,7 +849,7 @@ pet:AddToggle("AutoFeedToggle", {
     Description = "feeds the pet with the fruit in ur hand",
     Default = false,
     Callback = function(Value)
-        feedpet()
+        feedpet(value)
 })
 
 pet:AddButton({
