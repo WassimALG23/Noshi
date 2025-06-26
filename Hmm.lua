@@ -95,7 +95,7 @@ local playertab = Window:AddTab({
         Icon = "user"
     })
 
-local vuln = Window:AddTab({
+local misc = Window:AddTab({
         Title = "misc",
         Icon = "list"
     })
@@ -1080,10 +1080,10 @@ function svvererr(v)
     end
 end
 
-local ui = misc:AddSection("ui")
+local uisection = misc:AddSection("all ui)
 
 
-ui:AddButton({
+uisection:AddButton({
     Title = "Cosmetic Shop UI",
     Description = "opens cosmetics ui",
     Callback = function()
@@ -1096,7 +1096,7 @@ ui:AddButton({
 })
 
 
-ui:AddButton({
+uisection:AddButton({
     Title = "Gear Shop UI",
     Description = "opens gear shop ui",
     Callback = function()
@@ -1109,7 +1109,7 @@ ui:AddButton({
 })
 
 
-ui:AddButton({
+uisection:AddButton({
     Title = "Seed Shop UI",
     Description = "opens seed shop ui",
     Callback = function()
@@ -1121,7 +1121,7 @@ ui:AddButton({
     end
 })
 
-ui:AddButton({
+uisection:AddButton({
     Title = "Daily quest UI",
     Description = "opens daily quest ui",
     Callback = function()
@@ -1132,9 +1132,9 @@ ui:AddButton({
         end
     end
 })
-local extra = misc:AddSection("server version")
+local extrasection = misc:AddSection("server version")
 
-extra:AddParagraph({
+extrasection:AddParagraph({
         Title = "server version: ", Content = versgame
     })
 
