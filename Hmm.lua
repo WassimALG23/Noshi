@@ -404,7 +404,7 @@ end
 
 --
 
-player:AddSlider("WalkSpeedSlider", {
+playertab:AddSlider("WalkSpeedSlider", {
     Title = "WalkSpeed",
     Description = "Ajuste a velocidade de caminhada",
     Min = 20,
