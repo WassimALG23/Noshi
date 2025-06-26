@@ -61,7 +61,7 @@ local Window = Fluent:CreateWindow({
 
 local main = Window:AddTab({
     Title = "main",
-    Icon = "warehouse"
+    Icon = "text"
 })
 
 local shop = Window:AddTab({
