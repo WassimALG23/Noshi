@@ -296,7 +296,7 @@ local currentPos = hrp.Position
         print("Start (X) and End (Y) positions set to:", x)
     end
 
-function plantdistance()
+function plantdistance(input)
 
 local num = tonumber(input)
         if num then
@@ -703,7 +703,7 @@ local Slider = plant:AddInput("StepInput", {
     Default = "1",
     Numeric = true,
     Callback = function(input)
-        plantdistance()
+        plantdistance(input)
 })
 plant:AddButton({
     Title = "Click to Plant",
@@ -756,7 +756,7 @@ SellSection:AddToggle("EnableAutoSellPets", {
     Description = "Matches exact pet name only (ignores weight/age)",
     Default = false,
     Callback = function(state)
-        sellpetssel()
+        sellpetssel(state)
 })
 
 
@@ -849,7 +849,7 @@ pet:AddToggle("AutoFeedToggle", {
     Description = "feeds the pet with the fruit in ur hand",
     Default = false,
     Callback = function(Value)
-        feedpet(value)
+        feedpet(Value)
 })
 
 pet:AddButton({
@@ -1113,7 +1113,7 @@ event:AddToggle("auto give pollinated fruit", {
     Description = "Equip only Pollinated items and interact with the event machine (sorted by weight)",
     Default = false,
     Callback = function(toggle)
-pollinated()
+pollinated(toggle)
 })
 
 event:AddButton({
