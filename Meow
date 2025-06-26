@@ -47,7 +47,7 @@ player.CharacterAdded:Connect(function(char)
     hrp = character:WaitForChild("HumanoidRootPart")
 end)
 
-local Fluent = loadstring(Game:HttpGet("https://raw.githubusercontent.com/discoart/FluentPlus/refs/heads/main/alpha.lua"))()
+local Fluent = loadstring(game:HttpGet("https://raw.githubusercontent.com/discoart/FluentPlus/refs/heads/main/alpha.lua"))()
 Button_Icon = "rbxassetid://97949487588216"
 local Window = Fluent:CreateWindow({
     Title = "Grow a Garden |",
@@ -533,7 +533,7 @@ end
 
 -- UI Toggle
 local autoCollectEnabled = false
-local collectsection = main:AddSection("auto collect")
+local collectsection = pet:AddSection("auto collect")
 collectsection:AddToggle("autoCollectFruits", {
     Title = "Auto Collect All Fruits",
     Description = "auto collect",
@@ -713,7 +713,7 @@ plant:AddButton({
 })
 
 --
-local SellSection = main:AddSection("Sell")
+local SellSection = pet:AddSection("Sell")
 
 SellSection:AddButton({
     Title = "Sell all",
