@@ -34,7 +34,12 @@ local hrp = character:WaitForChild("HumanoidRootPart")
 local humanoid = character:WaitForChild("Humanoid")
 local scrollingFrame = game:GetService("Players").LocalPlayer.PlayerGui.ActivePetUI.Frame.Main.ScrollingFrame
 local feedsc = game:GetService("ReplicatedStorage"):WaitForChild("GameEvents"):WaitForChild("ActivePetService")
-
+local rs = game:GetService("ReplicatedStorage")
+local cs = game:GetService("CollectionService")
+local runService = game:GetService("RunService")
+local lp = players.LocalPlayer
+local cam = workspace.CurrentCamera
+local starterGui = game:GetService("StarterGui")
 -- event local
 
 player.CharacterAdded:Connect(function(char)
@@ -119,7 +124,19 @@ InterfaceManager:BuildInterfaceSection(config)
 
 -- Local Variáveis --
 
-
+local petNames = {
+    "Bear Bee", "Bee", "Black Bunny", "Blood Hedgehog", "Blood Kiwi", "Blood Owl",
+    "Brown Mouse", "Bunny", "Butterfly", "Capybara", "Cat", "Caterpillar", "Chicken",
+    "Chicken Zombie", "Cooked Owl", "Cow", "Crab", "Deer", "Disco Bee", "Dog", "Doge",
+    "Dragonfly", "Echo Frog", "Firefly", "Flamingo", "Frog", "Giant Ant", "Golden Bee",
+    "Golden Lab", "Grey Mouse", "Hedgehog", "Honey Bee", "Kiwi", "Mimic Octopus",
+    "Mole", "Monkey", "Moon Cat", "Moth", "Night Owl", "Orange Tabby", "Orangutan",
+    "Ostrich", "Owl", "Pack Bee", "Panda", "Peacock", "Petal Bee", "Pig", "Polar Bear",
+    "Praying Mantis", "Queen Bee", "Raccoon", "Red Dragon", "Red Fox",
+    "Red Giant Ant", "Rooster", "Scarlet Macaw", "Sea Otter", "Sea Turtle", "Seagull",
+    "Seal", "Silver Monkey", "Snail", "Spotted Deer", "Squirrel", "Starfish",
+    "Tarantula Hawk", "Toucan", "Turtle", "Wasp"
+}
 --[[ old
 local byallseed = {"Carrot", "Strawberry", "Blueberry", "Orange Tulip", "Tomato", "Corn", "Daffodil", "Watermelon", "Pumpkin", "Apple", "Bamboo", "Coconut", "Cactus", "Dragon Fruit", "Mango", "Grape", "Mushroom", "Pepper", "Cacao", "Beanstalk", "Ember Lily", "Sugar Apple"}
 ]]
@@ -172,7 +189,7 @@ local function byallgearfc()
     end
 end
 
-local function buypetegg()
+function buypetegg()
     local eggIDs = {1, 2, 3}
     for _, id in ipairs(eggIDs) do
         game:GetService("ReplicatedStorage"):WaitForChild("GameEvents"):WaitForChild("BuyPetEgg"):FireServer(id)
@@ -215,6 +232,64 @@ local function bbf()
     blah()
     task.wait(0.2)
     tpt(Pos)
+end
+
+local function sellpets()
+game:GetService("ReplicatedStorage"):WaitForChild("GameEvents"):WaitForChild("SellPet_RE"):FireServer()
+end
+
+local function sellpetssel(state)
+    autoSellEnabled = state
+    if state then
+        task.spawn(function()
+            local ReplicatedStorage = game:GetService("ReplicatedStorage")
+            local SellEvent = ReplicatedStorage:WaitForChild("GameEvents"):WaitForChild("SellPet_RE")
+
+            while autoSellEnabled do
+                local containers = { player.Backpack, player.Character }
+                for _, container in ipairs(containers) do
+                    for _, tool in ipairs(container:GetChildren()) do
+                        if tool:IsA("Tool") then
+                            local rawName = tool.Name
+                            local strippedName = rawName:match("^(.-)%s*%(") or rawName -- remove (age:xx,xxkg)
+
+                            for _, allowedName in ipairs(selectedPetsToSell) do
+                                if strippedName == allowedName then
+                                    local humanoid = player.Character and player.Character:FindFirstChildOfClass("Humanoid")
+                                    if humanoid then
+                                        humanoid:EquipTool(tool)
+                                        task.wait(0.2)
+                                        SellEvent:FireServer()
+                                        print("✅ Sold:", rawName)
+                                        task.wait(5)
+                                    end
+                                end
+                            end
+                        end
+                    end
+                end
+                task.wait(1)
+            end
+        end)
+    end
+end
+
+
+local function feedpet(Value)
+    autoFeed = Value
+    if Value then
+        spawn(function()
+            while autoFeed do
+                if pfeed then
+                    feedsc:FireServer("Feed", pfeed)
+                    print("pet:", pfeed)
+                else
+                    print("no pets are selected")
+                end
+                wait(0.3)
+            end
+        end)
+    end
 end
 
 local function tsf()
@@ -308,25 +383,7 @@ end
 
 -- Local Script --
 
-local autoHarvestEnabled = false
 
-local section = main:AddSection("auto collect")
-main:AddToggle("AutoHarvestToggle", {
-    Title = "Auto Harvest All",
-    Description = "Continuously harvests all ripe plants",
-    Default = false,
-    Callback = function(state)
-        autoHarvestEnabled = state
-        if state then
-            task.spawn(function()
-                while autoHarvestEnabled do
-                    HarvestPlants()
-                    task.wait(0.5) -- adjustable delay between harvests
-                end
-            end)
-        end
-    end
-})
 
 
 
@@ -338,8 +395,8 @@ main:AddToggle("AutoHarvestToggle", {
 local section = shop:AddSection("Seeds")
 
 shop:AddToggle("", {
-    Title = "Buy shop seed",
-    Description = "Buy all shop seed",
+    Title = "Buy seeds",
+    Description = "Buy seed",
     Default = false,
     Callback = function(Value)
         bsa = Value
@@ -366,7 +423,7 @@ end)
 local section = shop:AddSection("Gears")
 
 shop:AddToggle("", {
-    Title = "Buy shop gear",
+    Title = "Buy gear",
     Description = "Buy shop gear",
     Default = false,
     Callback = function(Value)
@@ -464,15 +521,15 @@ plant:AddButton({
     end
 })
 --
-
-sell:AddButton({
+local sellsection = main:AddSection("auto sell")
+main:AddButton({
     Title = "Sell all",
     Description = "sell all fruits in ur inventory",
     Callback = function()
         tsf()       
     end
 })
-sell:AddButton({
+main:AddButton({
     Title = "sell in hand",
     Description= "sells the fruit ur holding",
     Callback = function()
@@ -480,21 +537,122 @@ bbf()
 end
 })
 
+local sellpets = main:AddSection("auto sell pets")
+local selectedPetsToSell = {}
+
+sellpets:AddDropdown("PetsToSellDropdown", {
+    Title = "Select pets to auto-sell",
+    Description = "auto sells pets",
+    Values = petNames,
+    Multi = true,
+    Default = {}
+}):OnChanged(function(selection)
+    selectedPetsToSell = {}
+    for name, isSelected in pairs(selection) do
+        if isSelected then
+            table.insert(selectedPetsToSell, name)
+        end
+    end
+end)
+local autoSellEnabled = false
+
+sellpets:AddToggle("EnableAutoSellPets", {
+    Title = "Auto Sell Selected Pets",
+    Description = "Matches exact pet name only (ignores weight/age)",
+    Default = false,
+    Callback = function(state)
+        sellpetssel(state)
+})
+
+
+sellpets:AddButton({
+    Title = "Sell Pet",
+    Description = "Sells the pet you're holding",
+    Callback = function()
+        sellpets()
+    end
+})
+
+
+
+	
 --
 
-playertab:AddSlider("WalkSpeedSlider", {
+-- WalkSpeed Input
+playertab:AddInput("WalkSpeedInput", {
     Title = "WalkSpeed",
-    Description = "Ajuste a velocidade de caminhada",
-    Min = 20,
-    Max = 150,
-    Default = 20,
-    Rounding = 1,
-    Callback = function(value)
-        if game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChild("Humanoid") then
-            game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = value
+    Description = "Enter your desired walk speed",
+    Placeholder = "Example: 100",
+    Default = "20",
+    Numeric = true,
+    Callback = function(input)
+        local value = tonumber(input)
+        if value and game.Players.LocalPlayer.Character then
+            local humanoid = game.Players.LocalPlayer.Character:FindFirstChild("Humanoid")
+            if humanoid then
+                humanoid.WalkSpeed = value
+                print("✔️ WalkSpeed set to:", value)
+            end
+        else
+            warn("❌ Please enter a valid number")
         end
-     end      
+    end
 })
+
+-- Infinite Jump Toggle
+playertab:AddToggle("InfiniteJumpToggle", {
+    Title = "Infinite Jump",
+    Description = "Allows you to jump infinitely",
+    Default = false,
+    Callback = function(state)
+        getgenv().InfiniteJumpEnabled = state
+        local Player = game:GetService("Players").LocalPlayer
+        local UIS = game:GetService("UserInputService")
+
+        if not getgenv().InfiniteJumpConnection then
+            getgenv().InfiniteJumpConnection = UIS.JumpRequest:Connect(function()
+                if getgenv().InfiniteJumpEnabled and Player.Character and Player.Character:FindFirstChild("Humanoid") then
+                    Player.Character:FindFirstChild("Humanoid"):ChangeState("Jumping")
+                end
+            end)
+        end
+    end
+})
+
+-- No Clip Toggle
+playertab:AddToggle("NoClipToggle", {
+    Title = "No Clip",
+    Description = "Walk through walls",
+    Default = false,
+    Callback = function(state)
+        getgenv().NoClipEnabled = state
+        local RunService = game:GetService("RunService")
+        local Player = game:GetService("Players").LocalPlayer
+
+        if not getgenv().NoClipConnection then
+            getgenv().NoClipConnection = RunService.Stepped:Connect(function()
+                if getgenv().NoClipEnabled and Player.Character and Player.Character:FindFirstChild("Humanoid") then
+                    for _, v in pairs(Player.Character:GetDescendants()) do
+                        if v:IsA("BasePart") and v.CanCollide == true then
+                            v.CanCollide = false
+                        end
+                    end
+                end
+            end)
+        end
+    end
+})
+
+-- Optional: Reset logic when character respawns
+game.Players.LocalPlayer.CharacterAdded:Connect(function(char)
+    task.wait(1)
+    if getgenv().InfiniteJumpEnabled then
+        -- No need to reconnect, it auto-stays
+    end
+    if getgenv().NoClipEnabled then
+        -- Will continue automatically
+    end
+end)
 
 --
 
@@ -582,7 +740,183 @@ pet:AddButton({
         end
     end
 })
+------------------
 
+local eggEspEnabled = false
+local autoHatchEnabled = false
+local labelCache = {}
+local trackedEggs = {}
+local hatchedEggs = {}
+local connections = {}
+
+local petSection = pet:AddSection("Egg ESP & Auto Hatch")
+
+
+-- Safely get upvalues and hook function
+local fnHatch = nil
+local petList = {}
+local eggList = {}
+
+pcall(function()
+	local conn = getconnections(rs.GameEvents.PetEggService.OnClientEvent)[1]
+	if conn and typeof(conn.Function) == "function" then
+		fnHatch = getupvalue(getupvalue(conn.Function, 1), 2)
+		eggList = getupvalue(fnHatch, 1)
+		petList = getupvalue(fnHatch, 2)
+	end
+end)
+
+local function findEggById(uuid)
+	for _, egg in pairs(eggList) do
+		if egg:GetAttribute("OBJECT_UUID") == uuid then
+			return egg
+		end
+	end
+end
+
+local function notify(title, text)
+	pcall(function()
+		starterGui:SetCore("SendNotification", {
+			Title = title,
+			Text = text,
+			Duration = 5
+		})
+	end)
+end
+
+local function refreshLabel(uuid, pet)
+	local model = findEggById(uuid)
+	if model and labelCache[uuid] then
+		local eggType = model:GetAttribute("EggName")
+		labelCache[uuid].Text = `{eggType} | {pet}`
+	end
+
+	if autoHatchEnabled and model and not hatchedEggs[uuid] then
+		hatchedEggs[uuid] = true
+		task.spawn(function()
+			rs.GameEvents.PetEggService:FireServer("HatchPet", model)
+			notify("Auto Hatch", `🥚 Hatched: {pet}`)
+		end)
+	end
+end
+
+local function updateLabels()
+	for uuid, model in pairs(trackedEggs) do
+		local lbl = labelCache[uuid]
+		if not model or not model:IsDescendantOf(workspace) then
+			if lbl then lbl.Visible = false end
+			trackedEggs[uuid] = nil
+			continue
+		end
+
+		if lbl and eggEspEnabled then
+			local pos, visible = cam:WorldToViewportPoint(model:GetPivot().Position)
+			lbl.Position = Vector2.new(pos.X, pos.Y)
+			lbl.Visible = visible
+		elseif lbl then
+			lbl.Visible = false
+		end
+
+		-- Auto hatch if ESP is off
+		local pet = petList[uuid]
+		if autoHatchEnabled and pet and not hatchedEggs[uuid] then
+			hatchedEggs[uuid] = true
+			task.spawn(function()
+				rs.GameEvents.PetEggService:FireServer("HatchPet", model)
+				notify("Auto Hatch", `🥚 Hatched: {pet}`)
+			end)
+		end
+	end
+end
+
+local function createLabel(model)
+	if model:GetAttribute("OWNER") ~= lp.Name then return end
+	local uuid = model:GetAttribute("OBJECT_UUID")
+	if not uuid then return end
+
+	if not trackedEggs[uuid] then
+		trackedEggs[uuid] = model
+	end
+
+	if eggEspEnabled and not labelCache[uuid] then
+		local eggType = model:GetAttribute("EggName")
+		local pet = petList[uuid]
+
+		local txt = Drawing.new("Text")
+		txt.Text = `{eggType} | {pet or "not ready yet"}`
+		txt.Size = 18
+		txt.Color = Color3.new(1, 1, 1)
+		txt.Outline = true
+		txt.OutlineColor = Color3.new(0, 0, 0)
+		txt.Center = true
+		txt.Visible = false
+
+		labelCache[uuid] = txt
+	end
+end
+
+local function removeLabel(model)
+	local uuid = model:GetAttribute("OBJECT_UUID")
+	if uuid then
+		if labelCache[uuid] then
+			labelCache[uuid]:Remove()
+			labelCache[uuid] = nil
+		end
+		trackedEggs[uuid] = nil
+	end
+end
+
+-- ✅ Safe hook
+pcall(function()
+	local conn = getconnections(rs.GameEvents.EggReadyToHatch_RE.OnClientEvent)[1]
+	if conn and typeof(conn.Function) == "function" then
+		local original = conn.Function
+		hookfunction(original, newcclosure(function(uuid, pet)
+			refreshLabel(uuid, pet)
+			return original(uuid, pet)
+		end))
+	end
+end)
+
+-- ✅ ESP Toggle
+petesp:AddToggle("eggEspToggle", {
+	Title = "Egg ESP",
+	Default = false,
+	Callback = function(state)
+		eggEspEnabled = state
+
+		if not state then
+			for _, lbl in pairs(labelCache) do if lbl.Remove then lbl:Remove() end end
+			labelCache = {}
+		else
+			for _, inst in cs:GetTagged("PetEggServer") do
+				task.spawn(createLabel, inst)
+			end
+		end
+	end
+})
+
+-- ✅ Auto Hatch Toggle
+petesp:AddToggle("autoHatchToggle", {
+	Title = "Auto Hatch Eggs",
+	Default = false,
+	Callback = function(state)
+		autoHatchEnabled = state
+
+		if state then
+			for _, inst in cs:GetTagged("PetEggServer") do
+				task.spawn(createLabel, inst)
+			end
+		end
+	end
+})
+
+-- ⏳ Always track new eggs
+table.insert(connections, cs:GetInstanceAddedSignal("PetEggServer"):Connect(createLabel))
+table.insert(connections, cs:GetInstanceRemovedSignal("PetEggServer"):Connect(removeLabel))
+table.insert(connections, runService.PreRender:Connect(updateLabels))
+
+	
 --
 
 ui:AddSection("UIs")
