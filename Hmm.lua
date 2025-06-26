@@ -154,7 +154,7 @@ local PetsId = {}
 
 -- Local functions --
 
-function byallseedfc()
+local function byallseedfc()
     for i = 1, 25 do
         for _, seed in ipairs(selectedSeeds) do
             buySeed:FireServer(seed)
@@ -163,7 +163,7 @@ function byallseedfc()
     end
 end
 
-function byallgearfc()
+local function byallgearfc()
     for i = 1, 25 do
         for _, gear in ipairs(selectedGears) do
             buyGear:FireServer(gear)
@@ -172,7 +172,7 @@ function byallgearfc()
     end
 end
 
-function buypetegg()
+local function buypetegg()
     local eggIDs = {1, 2, 3}
     for _, id in ipairs(eggIDs) do
         game:GetService("ReplicatedStorage"):WaitForChild("GameEvents"):WaitForChild("BuyPetEgg"):FireServer(id)
@@ -180,12 +180,12 @@ function buypetegg()
     end
 end
 
-function svp()
+local function svp()
     Pos = hrp.Position
     pos = tostring(Pos)
 end
 
-function tpt(v3)
+local function tpt(v3)
     if typeof(v3) == "Vector3" then
         hrp.CFrame = CFrame.new(v3)
     elseif typeof(v3) == "string" then
@@ -196,19 +196,19 @@ function tpt(v3)
     end
 end
 
-function sf()
+local function sf()
     ReplicatedStorage:WaitForChild("GameEvents"):WaitForChild("Sell_Inventory"):FireServer()
 end
 
-function sm()
+local function sm()
     ReplicatedStorage:WaitForChild("GameEvents"):WaitForChild("NightQuestRemoteEvent"):FireServer("SubmitAllPlants")
 end
 
-function blah()
+local function blah()
 ReplicatedStorage:WaitForChild("GameEvents"):WaitForChild("Sell_Item"):FireServer()
 end
 
-function bbf()
+local function bbf()
     svp()
     hrp.CFrame = CFrame.new(86.57965850830078, 2.999999761581421, 0.4267919063568115)
     task.wait(0.25)
@@ -217,7 +217,7 @@ function bbf()
     tpt(Pos)
 end
 
-function tsf()
+local function tsf()
     svp()
     hrp.CFrame = CFrame.new(86.57965850830078, 2.999999761581421, 0.4267919063568115)
     task.wait(0.25)
@@ -226,7 +226,7 @@ function tsf()
     tpt(Pos)
 end
 
-function tsm()
+local function tsm()
     svp()
     hrp.CFrame = CFrame.new(-101.0422592163086, 4.400012493133545, -10.985257148742676)
     task.wait(0.25)
@@ -235,7 +235,7 @@ function tsm()
     tpt(Pos)
 end
 
-function ufav()
+local function ufav()
     local player = game:GetService("Players").LocalPlayer
     local char = player.Character
     local backpack = player.Backpack
@@ -246,9 +246,90 @@ function ufav()
     end
 end
 
+local function GetMyFarm()
+	for _, farm in pairs(workspace.Farm:GetChildren()) do
+		local owner = farm:FindFirstChild("Important") and farm.Important:FindFirstChild("Data") and farm.Important.Data:FindFirstChild("Owner")
+		if owner and owner.Value == LocalPlayer.Name then
+			return farm
+		end
+	end
+end
+
+local function GetRandomFarmPoint()
+	local farm = GetMyFarm()
+	if not farm then return Vector3.new(0, 0, 0) end
+	local plantLocations = farm.Important:FindFirstChild("Plant_Locations")
+	if not plantLocations then return Vector3.new(0, 0, 0) end
+
+	local parts = plantLocations:GetChildren()
+	if #parts == 0 then return Vector3.new(0, 0, 0) end
+
+	local part = parts[math.random(1, #parts)]
+	local pos, size = part.Position, part.Size
+	return Vector3.new(
+		math.random(math.floor(pos.X - size.X / 2), math.floor(pos.X + size.X / 2)),
+		4,
+		math.random(math.floor(pos.Z - size.Z / 2), math.floor(pos.Z + size.Z / 2))
+	)
+end
+
+local function GetHarvestablePlants()
+    local character = LocalPlayer.Character
+    if not character then return {} end
+
+    local root = GetMyFarm()
+    if not root then return {} end
+
+    local plantFolder = root.Important:FindFirstChild("Plants_Physical")
+    if not plantFolder then return {} end
+
+    local pos = character:GetPivot().Position
+    local plants = {}
+
+    for _, model in pairs(plantFolder:GetDescendants()) do
+        if model:IsA("ProximityPrompt") and model.Enabled then
+            local parent = model.Parent
+
+            table.insert(plants, parent.Parent)
+        end
+    end
+
+    return plants
+end
+
+local function HarvestPlants()
+    for _, prompt in ipairs(GetHarvestablePlants()) do
+        pcall(function()
+            ReplicatedStorage.ByteNetReliable:FireServer(buffer.fromstring("\001\001\000\001"), { prompt })
+        end)
+    end
+end
+
+
+
+
+
 -- Local Script --
 
+local autoHarvestEnabled = false
 
+local section = main:AddSection("auto collect")
+main:AddToggle("AutoHarvestToggle", {
+    Title = "Auto Harvest All",
+    Description = "Continuously harvests all ripe plants",
+    Default = false,
+    Callback = function(state)
+        autoHarvestEnabled = state
+        if state then
+            task.spawn(function()
+                while autoHarvestEnabled do
+                    HarvestPlants()
+                    task.wait(0.5) -- adjustable delay between harvests
+                end
+            end)
+        end
+    end
+})
 
 
 
