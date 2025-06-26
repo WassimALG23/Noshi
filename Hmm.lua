@@ -37,7 +37,7 @@ local feedsc = game:GetService("ReplicatedStorage"):WaitForChild("GameEvents"):W
 local rs = game:GetService("ReplicatedStorage")
 local cs = game:GetService("CollectionService")
 local runService = game:GetService("RunService")
-local lp = players.LocalPlayer
+local lp = game:GetService("Players").LocalPlayer
 local cam = workspace.CurrentCamera
 local starterGui = game:GetService("StarterGui")
 -- event local
