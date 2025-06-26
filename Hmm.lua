@@ -321,61 +321,9 @@ local function ufav()
     end
 end
 
-local function GetMyFarm()
-	for _, farm in pairs(workspace.Farm:GetChildren()) do
-		local owner = farm:FindFirstChild("Important") and farm.Important:FindFirstChild("Data") and farm.Important.Data:FindFirstChild("Owner")
-		if owner and owner.Value == player.Name then
-		return farm
-		end
-	end
-end
 
-local function GetRandomFarmPoint()
-	local farm = GetMyFarm()
-	if not farm then return Vector3.new(0, 0, 0) end
-	local plantLocations = farm.Important:FindFirstChild("Plant_Locations")
-	if not plantLocations then return Vector3.new(0, 0, 0) end
 
-	local parts = plantLocations:GetChildren()
-	if #parts == 0 then return Vector3.new(0, 0, 0) end
-
-	local part = parts[math.random(1, #parts)]
-	local pos, size = part.Position, part.Size
-	return Vector3.new(
-		math.random(math.floor(pos.X - size.X / 2), math.floor(pos.X + size.X / 2)),
-		4,
-		math.random(math.floor(pos.Z - size.Z / 2), math.floor(pos.Z + size.Z / 2))
-	)
-end
-
-local function GetHarvestablePlants()
-    local character = player.Character or player.CharacterAdded:Wait()
-    if not character then return {} end
-
-    local root = GetMyFarm()
-    if not root then return {} end
-
-    local plantFolder = root.Important:FindFirstChild("Plants_Physical")
-    if not plantFolder then return {} end
-
-    local plants = {}
-
-    for _, model in pairs(plantFolder:GetDescendants()) do
-        if model:IsA("ProximityPrompt") and model.Enabled then
-            table.insert(plants, model.Parent.Parent)
-        end
-    end
-
-    return plants
-end
-
-local function HarvestPlants()
-    for _, prompt in ipairs(GetHarvestablePlants()) do
-        pcall(function()
-            ReplicatedStorage.ByteNetReliable:FireServer(buffer.fromstring("\001\001\000\001"), { prompt })
-        end)
-    end
-end
+    
 
 
 
