@@ -36,7 +36,6 @@ local scrollingFrame = player.PlayerGui.ActivePetUI.Frame.Main.ScrollingFrame
 local feedsc = ReplicatedStorage:WaitForChild("GameEvents"):WaitForChild("ActivePetService")
 
 local get_farm = require(ReplicatedStorage.Modules.GetFarm)
-local buffer = require(ReplicatedStorage.Modules.Buffer)("\1\1\0\1") -- ✅ this is the fix
 local farm = get_farm(player)
 
 
