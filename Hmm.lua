@@ -47,7 +47,7 @@ player.CharacterAdded:Connect(function(char)
     hrp = character:WaitForChild("HumanoidRootPart")
 end)
 
-local Fluent = loadstring(Game:HttpGet("https://raw.githubusercontent.com/discoart/FluentPlus/refs/heads/main/alpha.lua"))()
+local Fluent = loadstring(Game:HttpGet("https://raw.githubusercontent.com/WassimALG23/Noshi/refs/heads/main/alpha.lua"))()
 Button_Icon = "rbxassetid://97949487588216"
 local Window = Fluent:CreateWindow({
     Title = "Grow a Garden |",
