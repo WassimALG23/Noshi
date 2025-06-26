@@ -297,6 +297,81 @@ end
 -- Local Script --
 
 
+-- Load modules
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Item_Module = require(ReplicatedStorage:WaitForChild("Item_Module"))
+local MutationHandler = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("MutationHandler"))
+
+-- Paragraphs for UI
+local worthParagraph = main:AddParagraph({
+    Title = "Inventory Total Worth",
+    Content = "0"
+})
+
+local topItemParagraph = main:AddParagraph({
+    Title = "Most Valuable Fruit",
+    Content = "None"
+})
+
+-- Value calculation per tool
+local function calculateToolValue(tool)
+    local itemStr = tool:FindFirstChild("Item_String")
+    local variant = tool:FindFirstChild("Variant")
+    local weight = tool:FindFirstChild("Weight")
+
+    if not (itemStr and variant and weight) then
+        return 0, "Unknown"
+    end
+
+    local itemData = Item_Module.Return_Data(itemStr.Value)
+    if not itemData or #itemData < 3 then
+        warn("Invalid item data:", itemStr.Value)
+        return 0, itemStr.Value
+    end
+
+    local clamped = math.clamp(weight.Value / itemData[2], 0.95, 1e8)
+    local value = itemData[3] * MutationHandler:CalcValueMulti(tool) * Item_Module.Return_Multiplier(variant.Value)
+    return math.round(value * clamped * clamped), itemStr.Value
+end
+
+-- Total inventory + best item
+local function calculateInventoryTotal()
+    local player = game:GetService("Players").LocalPlayer
+    local total = 0
+    local highest = 0
+    local bestItem = "None"
+
+    for _, container in ipairs({player.Backpack, player.Character}) do
+        for _, tool in ipairs(container:GetChildren()) do
+            if tool:IsA("Tool") then
+                local val, name = calculateToolValue(tool)
+                total += val
+                if val > highest then
+                    highest = val
+                    bestItem = name
+                end
+            end
+        end
+    end
+
+    return total, bestItem, highest
+end
+
+-- Button to run it
+main:AddButton({
+    Title = "Calculate Total Value",
+    Description = "Click to calculate total value of your fruit inventory",
+    Callback = function()
+        local total, bestItem, bestValue = calculateInventoryTotal()
+        worthParagraph:SetContent(tostring(total))
+        topItemParagraph:SetContent(`${bestItem} = ${bestValue}`)
+    end
+})
+
+
+
+
+
 
 
 
