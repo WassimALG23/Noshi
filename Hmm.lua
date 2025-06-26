@@ -169,7 +169,6 @@ local function byallseedfc()
         end
     end
 end
-
 local function byallgearfc()
     for i = 1, 25 do
         for _, gear in ipairs(selectedGears) do
@@ -994,7 +993,7 @@ event:AddToggle("auto submit", {
 local uisection = extra:AddSection("all ui)
 
 
-extra:AddButton({
+uisection:AddButton({
     Title = "Cosmetic Shop UI",
     Description = "opens cosmetics ui",
     Callback = function()
@@ -1007,7 +1006,7 @@ extra:AddButton({
 })
 
 
-extra:AddButton({
+uisection:AddButton({
     Title = "Gear Shop UI",
     Description = "opens gear shop ui",
     Callback = function()
@@ -1020,7 +1019,7 @@ extra:AddButton({
 })
 
 
-extra:AddButton({
+uisection:AddButton({
     Title = "Seed Shop UI",
     Description = "opens seed shop ui",
     Callback = function()
@@ -1032,7 +1031,7 @@ extra:AddButton({
     end
 })
 
-extra:AddButton({
+uisection:AddButton({
     Title = "Daily quest UI",
     Description = "opens daily quest ui",
     Callback = function()
@@ -1044,8 +1043,8 @@ extra:AddButton({
     end
 })
 local extrasection = extra:AddSection("server version")
-
-extra:AddParagraph({
+local versgame = (game:GetService("Players").LocalPlayer.PlayerGui.Version_UI.Version.Text):gsub("^v", "")
+extrasection:AddParagraph({
         Title = "server version: ", Content = versgame
     })
 
