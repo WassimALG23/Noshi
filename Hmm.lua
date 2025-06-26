@@ -95,7 +95,7 @@ local playertab = Window:AddTab({
         Icon = "user"
     })
 
-local misc = Window:AddTab({
+local extra = Window:AddTab({
         Title = "misc",
         Icon = "list"
     })
@@ -802,7 +802,7 @@ table.insert(connections, runService.PreRender:Connect(updateLabels))
 --
 
 local section = event:AddSection("Honey event")
-local ativo = false
+local activef = false
 local itensOrdenados = {}
 
 event:AddToggle("auto give pollinated fruit", {
@@ -810,7 +810,7 @@ event:AddToggle("auto give pollinated fruit", {
     Description = "Equip only Pollinated items and interact with the event machine (sorted by weight)",
     Default = false,
     Callback = function(toggle)
-        ativo = toggle
+        activef = toggle
         if not toggle then return end
 
         local player = game:GetService("Players").LocalPlayer
@@ -822,7 +822,7 @@ event:AddToggle("auto give pollinated fruit", {
 
         -- Atualiza a lista de itens ordenados por peso
         task.spawn(function()
-            while ativo do
+            while activef do
                 local novaLista = {}
                 local char = player.Character or player.CharacterAdded:Wait()
                 local mochila = player:FindFirstChild("Backpack")
@@ -851,7 +851,7 @@ event:AddToggle("auto give pollinated fruit", {
 
         -- Interação com a máquina
         task.spawn(function()
-            while ativo do
+            while activef do
                 local char = player.Character or player.CharacterAdded:Wait()
                 local humanoid = char:FindFirstChildOfClass("Humanoid")
                 local label
@@ -968,18 +968,18 @@ task.spawn(function()
     end
 end)
 local section = event:AddSection("summer event")
-local ativo = false
+local actives = false
 
 event:AddToggle("auto submit", {
     Title = "auto summer event",
     Description = "submit all summer fruits",
     Default = false,
     Callback = function(toggle)
-        ativo = toggle
+        actives = toggle
         if not toggle then return end
 
         task.spawn(function()
-            while ativo do
+            while actives do
                 local args = {
                     "SubmitAllPlants"
                 }
@@ -991,10 +991,10 @@ event:AddToggle("auto submit", {
 })
 --
 
-local uisection = misc:AddSection("all ui)
+local uisection = extra:AddSection("all ui)
 
 
-misc:AddButton({
+extra:AddButton({
     Title = "Cosmetic Shop UI",
     Description = "opens cosmetics ui",
     Callback = function()
@@ -1007,7 +1007,7 @@ misc:AddButton({
 })
 
 
-misc:AddButton({
+extra:AddButton({
     Title = "Gear Shop UI",
     Description = "opens gear shop ui",
     Callback = function()
@@ -1020,7 +1020,7 @@ misc:AddButton({
 })
 
 
-misc:AddButton({
+extra:AddButton({
     Title = "Seed Shop UI",
     Description = "opens seed shop ui",
     Callback = function()
@@ -1032,7 +1032,7 @@ misc:AddButton({
     end
 })
 
-misc:AddButton({
+extra:AddButton({
     Title = "Daily quest UI",
     Description = "opens daily quest ui",
     Callback = function()
@@ -1043,9 +1043,9 @@ misc:AddButton({
         end
     end
 })
-local extrasection = misc:AddSection("server version")
+local extrasection = extra:AddSection("server version")
 
-misc:AddParagraph({
+extra:AddParagraph({
         Title = "server version: ", Content = versgame
     })
 
