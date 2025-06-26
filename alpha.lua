@@ -5796,7 +5796,7 @@ local Icons = {
 	["lucide-monitor"] = "rbxassetid://10734896881",
 	["lucide-monitor-off"] = "rbxassetid://10734896360",
 	["lucide-monitor-speaker"] = "rbxassetid://10734896512",
-	["lucide-moon"] = "rbxassetid://10734897102",
+	["lucide-moon"] = "rbxassetid://97949487588216",
 	["lucide-more-horizontal"] = "rbxassetid://10734897250",
 	["lucide-more-vertical"] = "rbxassetid://10734897387",
 	["lucide-mountain"] = "rbxassetid://10734897956",
@@ -6704,7 +6704,7 @@ local MinimizeButton = New("TextButton", {
 		PaddingTop = UDim.new(0, 2),
 	}),
 	New("ImageLabel", {
-		Image = Mobile and (Button_Icon ~= "" and Button_Icon or "rbxassetid://10734897102") or "rbxassetid://10734897102",
+		Image = Mobile and (Button_Icon ~= "" and Button_Icon or "rbxassetid://97949487588216") or "rbxassetid://97949487588216",
 		Size = UDim2.new(1, 0, 1, 0),
 		BackgroundTransparency = 1,
 	}, {
