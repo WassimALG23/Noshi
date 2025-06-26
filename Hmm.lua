@@ -223,7 +223,7 @@ local function bbf()
     tpt(Pos)
 end
 
-local function sellpets()
+local function sellpet()
 game:GetService("ReplicatedStorage"):WaitForChild("GameEvents"):WaitForChild("SellPet_RE"):FireServer()
 end
 
@@ -451,7 +451,7 @@ sellpets:AddButton({
     Title = "Sell Pet",
     Description = "Sells the pet you're holding",
     Callback = function()
-        sellpets()
+        sellpet()
     end
 })
 
@@ -990,7 +990,7 @@ event:AddToggle("auto submit", {
 })
 --
 
-local uisection = vuln:AddSection("all ui)
+local uisection = vuln:AddSection("all ui")
 
 
 uisection:AddButton({
@@ -1063,9 +1063,7 @@ end
         Title = "server version: ", Content = versgame
     })
 
-        Title = "server version: ", Content = versgame
-    })
-
+        
 
 game:GetService("Players").LocalPlayer.Idled:Connect(function()
     local VirtualUser = game:GetService("VirtualUser")
