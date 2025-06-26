@@ -324,8 +324,8 @@ end
 local function GetMyFarm()
 	for _, farm in pairs(workspace.Farm:GetChildren()) do
 		local owner = farm:FindFirstChild("Important") and farm.Important:FindFirstChild("Data") and farm.Important.Data:FindFirstChild("Owner")
-		if owner and owner.Value == LocalPlayer.Name then
-			return farm
+		if owner and owner.Value == player.Name then
+		return farm
 		end
 	end
 end
@@ -349,7 +349,7 @@ local function GetRandomFarmPoint()
 end
 
 local function GetHarvestablePlants()
-    local character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+    local character = player.Character or player.CharacterAdded:Wait()
     if not character then return {} end
 
     local root = GetMyFarm()
