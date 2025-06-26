@@ -252,7 +252,7 @@ end
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local LocalPlayer = Players.LocalPlayer
-local buffer = require(ReplicatedStorage.Modules.ByteNet)("\1\1\0\1")
+local buffer = require(ReplicatedStorage.Modules.ByteNet.process.bufferWriter)("\1\1\0\1")
 
 -- Get player's farm
 local function GetMyFarm()
