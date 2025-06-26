@@ -95,7 +95,7 @@ local playertab = Window:AddTab({
         Icon = "user"
     })
 
-local extra = Window:AddTab({
+local vuln = Window:AddTab({
         Title = "misc",
         Icon = "list"
     })
@@ -990,7 +990,7 @@ event:AddToggle("auto submit", {
 })
 --
 
-local uisection = extra:AddSection("all ui)
+local uisection = vuln:AddSection("all ui)
 
 
 uisection:AddButton({
@@ -1042,9 +1042,27 @@ uisection:AddButton({
         end
     end
 })
-local extrasection = extra:AddSection("server version")
+local extrasection = vuln:AddSection("server version")
+
 local versgame = (game:GetService("Players").LocalPlayer.PlayerGui.Version_UI.Version.Text):gsub("^v", "")
-extrasection:AddParagraph({
+
+function svvererr(v)
+    local newv = tonumber(v)
+    local numvers = tonumber(versgame)
+    if numvers and newv and numvers > newv then
+        Fluent:Notify({
+            Title = "wrong server version",
+            Content = "current server version: " .. versgame,
+            SubContent = "version needed: " .. newv .. " or less!",
+            Duration = 5
+        })
+    end
+end
+
+	vuln:AddParagraph({
+        Title = "server version: ", Content = versgame
+    })
+
         Title = "server version: ", Content = versgame
     })
 
