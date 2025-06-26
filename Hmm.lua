@@ -238,41 +238,6 @@ local function sellpets()
 game:GetService("ReplicatedStorage"):WaitForChild("GameEvents"):WaitForChild("SellPet_RE"):FireServer()
 end
 
-local function sellpetssel(state)
-    autoSellEnabled = state
-    if state then
-        task.spawn(function()
-            local ReplicatedStorage = game:GetService("ReplicatedStorage")
-            local SellEvent = ReplicatedStorage:WaitForChild("GameEvents"):WaitForChild("SellPet_RE")
-
-            while autoSellEnabled do
-                local containers = { player.Backpack, player.Character }
-                for _, container in ipairs(containers) do
-                    for _, tool in ipairs(container:GetChildren()) do
-                        if tool:IsA("Tool") then
-                            local rawName = tool.Name
-                            local strippedName = rawName:match("^(.-)%s*%(") or rawName -- remove (age:xx,xxkg)
-
-                            for _, allowedName in ipairs(selectedPetsToSell) do
-                                if strippedName == allowedName then
-                                    local humanoid = player.Character and player.Character:FindFirstChildOfClass("Humanoid")
-                                    if humanoid then
-                                        humanoid:EquipTool(tool)
-                                        task.wait(0.2)
-                                        SellEvent:FireServer()
-                                        print("✅ Sold:", rawName)
-                                        task.wait(5)
-                                    end
-                                end
-                            end
-                        end
-                    end
-                end
-                task.wait(1)
-            end
-        end)
-    end
-end
 
 
 local function feedpet(Value)
@@ -486,31 +451,11 @@ end
 })
 
 local sellpets = main:AddSection("auto sell pets")
-local selectedPetsToSell = {}
 
-sellpets:AddDropdown("PetsToSellDropdown", {
-    Title = "Select pets to auto-sell",
-    Description = "auto sells pets",
-    Values = petNames,
-    Multi = true,
-    Default = {}
-}):OnChanged(function(selection)
-    selectedPetsToSell = {}
-    for name, isSelected in pairs(selection) do
-        if isSelected then
-            table.insert(selectedPetsToSell, name)
-        end
-    end
-end)
-local autoSellEnabled = false
 
-sellpets:AddToggle("EnableAutoSellPets", {
-    Title = "Auto Sell Selected Pets",
-    Description = "Matches exact pet name only (ignores weight/age)",
-    Default = false,
-    Callback = function(state)
-        sellpetssel(state)
-})
+
+
+
 
 
 sellpets:AddButton({
