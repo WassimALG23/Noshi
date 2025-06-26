@@ -79,11 +79,6 @@ local plant = Window:AddTab({
     Icon = "leaf"
 })
 
-local sell = Window:AddTab({
-    Title = "sell",
-    Icon = "banknote"
-})
-
 
 local pet = Window:AddTab({
         Title = "pet",
@@ -95,18 +90,13 @@ local event = Window:AddTab({
     Icon = "calendar"
 })
 
-local ui = Window:AddTab({
-        Title = "UIs",
-        Icon = "scroll"
-    })
-
 local playertab = Window:AddTab({
         Title = "Player",
         Icon = "user"
     })
 
 local vuln = Window:AddTab({
-        Title = "vulnerabilitys",
+        Title = "misc",
         Icon = "list"
     })
 
@@ -847,7 +837,7 @@ pcall(function()
 end)
 
 -- ✅ ESP Toggle
-petesp:AddToggle("eggEspToggle", {
+petSection:AddToggle("eggEspToggle", {
 	Title = "Egg ESP",
 	Default = false,
 	Callback = function(state)
@@ -865,7 +855,7 @@ petesp:AddToggle("eggEspToggle", {
 })
 
 -- ✅ Auto Hatch Toggle
-petesp:AddToggle("autoHatchToggle", {
+petSection:AddToggle("autoHatchToggle", {
 	Title = "Auto Hatch Eggs",
 	Default = false,
 	Callback = function(state)
@@ -883,61 +873,6 @@ petesp:AddToggle("autoHatchToggle", {
 table.insert(connections, cs:GetInstanceAddedSignal("PetEggServer"):Connect(createLabel))
 table.insert(connections, cs:GetInstanceRemovedSignal("PetEggServer"):Connect(removeLabel))
 table.insert(connections, runService.PreRender:Connect(updateLabels))
-
-	
---
-
-ui:AddSection("UIs")
-
-ui:AddButton({
-    Title = "Cosmetic Shop UI",
-    Description = "opens cosmetics ui",
-    Callback = function()
-        local ui = game:GetService("Players").LocalPlayer.PlayerGui:FindFirstChild("CosmeticShop_UI")
-        if ui then
-            ui.Enabled = not ui.Enabled
-            print("Cosmetic Shop UI:", ui.Enabled and "Ativada" or "Desativada")
-        end
-    end
-})
-
-
-ui:AddButton({
-    Title = "Gear Shop UI",
-    Description = "opens gear shop ui",
-    Callback = function()
-        local ui = game:GetService("Players").LocalPlayer.PlayerGui:FindFirstChild("Gear_Shop")
-        if ui then
-            ui.Enabled = not ui.Enabled
-            print("Gear Shop UI:", ui.Enabled and "Ativada" or "Desativada")
-        end
-    end
-})
-
-
-ui:AddButton({
-    Title = "Seed Shop UI",
-    Description = "opens seed shop ui",
-    Callback = function()
-        local ui = game:GetService("Players").LocalPlayer.PlayerGui:FindFirstChild("Seed_Shop")
-        if ui then
-            ui.Enabled = not ui.Enabled
-            print("Seed Shop UI:", ui.Enabled and "Ativada" or "Desativada")
-        end
-    end
-})
-
-ui:AddButton({
-    Title = "Daily quest UI",
-    Description = "opens daily quest ui",
-    Callback = function()
-        local ui = game:GetService("Players").LocalPlayer.PlayerGui.DailyQuests_UI
-        if ui then
-            ui.Enabled = not ui.Enabled
-            print("Daily Quest UI:", ui.Enabled and "Ativada" or "Desativada")
-        end
-    end
-})
 
 --
 
@@ -1145,69 +1080,64 @@ function svvererr(v)
     end
 end
 
+local ui = misc:AddSection("ui")
 
 
-vuln:AddParagraph({
+ui:AddButton({
+    Title = "Cosmetic Shop UI",
+    Description = "opens cosmetics ui",
+    Callback = function()
+        local ui = game:GetService("Players").LocalPlayer.PlayerGui:FindFirstChild("CosmeticShop_UI")
+        if ui then
+            ui.Enabled = not ui.Enabled
+            print("Cosmetic Shop UI:", ui.Enabled and "Ativada" or "Desativada")
+        end
+    end
+})
+
+
+ui:AddButton({
+    Title = "Gear Shop UI",
+    Description = "opens gear shop ui",
+    Callback = function()
+        local ui = game:GetService("Players").LocalPlayer.PlayerGui:FindFirstChild("Gear_Shop")
+        if ui then
+            ui.Enabled = not ui.Enabled
+            print("Gear Shop UI:", ui.Enabled and "Ativada" or "Desativada")
+        end
+    end
+})
+
+
+ui:AddButton({
+    Title = "Seed Shop UI",
+    Description = "opens seed shop ui",
+    Callback = function()
+        local ui = game:GetService("Players").LocalPlayer.PlayerGui:FindFirstChild("Seed_Shop")
+        if ui then
+            ui.Enabled = not ui.Enabled
+            print("Seed Shop UI:", ui.Enabled and "Ativada" or "Desativada")
+        end
+    end
+})
+
+ui:AddButton({
+    Title = "Daily quest UI",
+    Description = "opens daily quest ui",
+    Callback = function()
+        local ui = game:GetService("Players").LocalPlayer.PlayerGui.DailyQuests_UI
+        if ui then
+            ui.Enabled = not ui.Enabled
+            print("Daily Quest UI:", ui.Enabled and "Ativada" or "Desativada")
+        end
+    end
+})
+local extra = misc:AddSection("server version")
+
+extra:AddParagraph({
         Title = "server version: ", Content = versgame
     })
 
-vuln:AddButton({
-    Title = "Gear skip",
-    Description = "skip gear timer",
-    Callback = function()
-        svvererr(1349)
-        local args = {
-            [1] = "Claim",
-            [2] = workspace.Interaction.UpdateItems.NewCrafting.EventCraftingWorkBench,
-            [3] = "GearEventWorkbench",
-            [4] = 1
-        }
-
-        game:GetService("ReplicatedStorage").GameEvents.CraftingGlobalObjectService:FireServer(unpack(args))
-    end
-})
-
-vuln:AddButton({
-    Title = "Seed skip ",
-    Description = "skip seed crafter timer",
-    Callback = function()
-        svvererr(1349)
-        local args = {
-            [1] = "Claim",
-            [2] = workspace.Interaction.UpdateItems.NewCrafting.SeedEventCraftingWorkBench,
-            [3] = "SeedEventWorkbench",
-            [4] = 1
-        }
-
-        game:GetService("ReplicatedStorage").GameEvents.CraftingGlobalObjectService:FireServer(unpack(args))
-    end
-})
-
-
-
-
-
-
-task.spawn(function()
-    local lastMinute = -1
-    while true do
-        local minutos = os.date("*t").min
-        if minutos ~= lastMinute then
-            lastMinute = minutos
-
-            if bsa then
-                task.spawn(byallseedfc)
-            end
-            if bsg then
-                task.spawn(byallgearfc)
-            end
-            if bsp then
-                task.spawn(buypetegg)
-            end
-        end
-        task.wait(1)
-    end
-end)
 
 game:GetService("Players").LocalPlayer.Idled:Connect(function()
     local VirtualUser = game:GetService("VirtualUser")
