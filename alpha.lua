@@ -3468,7 +3468,7 @@ Components.Window = (function()
 					if minimizeButton then
 						local imageLabel = minimizeButton:FindFirstChild("ImageLabel")
 						if imageLabel then
-							imageLabel.Image = Window.Minimized and "rbxassetid://10734896384" or "rbxassetid://10734897102"
+							imageLabel.Image = Window.Minimized and "rbxassetid://97949487588216" or "rbxassetid://97949487588216"
 						end
 					end
 				end)
