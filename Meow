@@ -32,16 +32,12 @@ local player = Players.LocalPlayer
 local character = player.Character or player.CharacterAdded:Wait()
 local hrp = character:WaitForChild("HumanoidRootPart")
 local humanoid = character:WaitForChild("Humanoid")
-local scrollingFrame = game:GetService("Players").LocalPlayer.PlayerGui.ActivePetUI.Frame.Main.ScrollingFrame
-local feedsc = game:GetService("ReplicatedStorage"):WaitForChild("GameEvents"):WaitForChild("ActivePetService")
-local players = game:GetService("Players")
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local get_farm = require(ReplicatedStorage.Modules.GetFarm)
-local bufferModule = require(ReplicatedStorage.Modules.Buffer)
-local buffer = bufferModule.fromstring("\1\1\0\1")
-local farm = get_farm(player)
-local local_player = players.LocalPlayer
+local scrollingFrame = player.PlayerGui.ActivePetUI.Frame.Main.ScrollingFrame
+local feedsc = ReplicatedStorage:WaitForChild("GameEvents"):WaitForChild("ActivePetService")
 
+local get_farm = require(ReplicatedStorage.Modules.GetFarm)
+local buffer = require(ReplicatedStorage.Modules.Buffer)("\1\1\0\1") -- ✅ this is the fix
+local farm = get_farm(player)
 
 
 
