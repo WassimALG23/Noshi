@@ -342,20 +342,21 @@ local function GetHarvestablePlants()
     local plants = {}
 
     for _, model in pairs(plantFolder:GetDescendants()) do
-        if model:IsA("ProximityPrompt") and model.Enabled then
-            print("Found a harvestable prompt") -- DEBUG
-            local parent = model.Parent
-            table.insert(plants, parent.Parent)
-        end
+    if model:IsA("ProximityPrompt") and model.Enabled then
+        print("Found harvestable prompt:", model.Name)
+        table.insert(plants, model.Parent.Parent)
     end
+end
 
     return plants
 end
 
 local function HarvestPlants()
-    print("Harvesting...") -- DEBUG
+    print("HarvestPlants called") -- Add this line
+
     for _, prompt in ipairs(GetHarvestablePlants()) do
         pcall(function()
+            print("Firing server for:", prompt) -- Add this too
             ReplicatedStorage.ByteNetReliable:FireServer(buffer.fromstring("\001\001\000\001"), { prompt })
         end)
     end
@@ -364,6 +365,8 @@ end
 task.spawn(function()
 	while task.wait(0.3) do
 		if autoHarvestEnabled then
+				print("Loop running. autoHarvestEnabled =", autoHarvestEnabled)
+				
 			HarvestPlants()
 		end
 	end
