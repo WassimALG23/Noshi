@@ -343,8 +343,8 @@ local function GetHarvestablePlants()
 
     for _, model in pairs(plantFolder:GetDescendants()) do
         if model:IsA("ProximityPrompt") and model.Enabled then
+            print("Found a harvestable prompt") -- DEBUG
             local parent = model.Parent
-
             table.insert(plants, parent.Parent)
         end
     end
@@ -353,6 +353,7 @@ local function GetHarvestablePlants()
 end
 
 local function HarvestPlants()
+    print("Harvesting...") -- DEBUG
     for _, prompt in ipairs(GetHarvestablePlants()) do
         pcall(function()
             ReplicatedStorage.ByteNetReliable:FireServer(buffer.fromstring("\001\001\000\001"), { prompt })
@@ -383,8 +384,9 @@ collectsection:AddToggle("AutoHarvest", {
     Description = "",
     Default = false,
     Callback = function(value)
-        autoHarvestEnabled = value
-    end
+    print("Toggle changed:", value)
+    autoHarvestEnabled = value
+		end
 })
 
 
