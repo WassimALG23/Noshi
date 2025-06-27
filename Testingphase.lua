@@ -103,7 +103,7 @@ universal:AddButton({ Title = "Infinite Yield", Callback = function()
         loadstring(game:HttpGet("https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source"))()
     end)
     if not success then Fluent:Notify({ Title = "Script Execution Error", Content = tostring(err), Duration = 5 }) end
-end
+end})
 -- Kat
         local kat = Window:AddTab({ Title = "KAT", Icon = "crosshair" })
 
