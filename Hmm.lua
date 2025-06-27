@@ -22,24 +22,37 @@ getgenv().vers = vful
 repeat task.wait() until game:IsLoaded()
 repeat task.wait() until game.Players.LocalPlayer:FindFirstChild("PlayerGui") 
 
-local ReplicatedStorage = game:GetService("ReplicatedStorage") 
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local InsertService = game:GetService("InsertService")
+local MarketplaceService = game:GetService("MarketplaceService")
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+
+local LocalPlayer = Players.LocalPlayer
+local Leaderstats = LocalPlayer.leaderstats
+local Backpack = LocalPlayer.Backpack
+local PlayerGui = LocalPlayer.PlayerGui
+
+local ShecklesCount = Leaderstats.Sheckles
+local GameInfo = MarketplaceService:GetProductInfo(game.PlaceId)
+
+local GameEvents = ReplicatedStorage.GameEvents
+local Farms = workspace.Farm
+
 local buySeed = ReplicatedStorage.GameEvents.BuySeedStock
 local buyGear = ReplicatedStorage.GameEvents.BuyGearStock
 local Plant = ReplicatedStorage.GameEvents.Plant_RE
 local BuyPet = ReplicatedStorage.GameEvents.BuyPetEgg
-local Players = game:GetService("Players")
 local player = Players.LocalPlayer
 local character = player.Character or player.CharacterAdded:Wait()
 local hrp = character:WaitForChild("HumanoidRootPart")
 local humanoid = character:WaitForChild("Humanoid")
 local scrollingFrame = game:GetService("Players").LocalPlayer.PlayerGui.ActivePetUI.Frame.Main.ScrollingFrame
 local feedsc = game:GetService("ReplicatedStorage"):WaitForChild("GameEvents"):WaitForChild("ActivePetService")
-local rs = game:GetService("ReplicatedStorage")
 local cs = game:GetService("CollectionService")
-local runService = game:GetService("RunService")
-local lp = game:GetService("Players").LocalPlayer
 local cam = workspace.CurrentCamera
 local starterGui = game:GetService("StarterGui")
+
 -- event local
 
 player.CharacterAdded:Connect(function(char)
@@ -554,7 +567,7 @@ end
 
 local pDropdown = pet:AddDropdown("Dropdown", {
     Title = "choose the pet to auto feed\n",
-    Description = "auto se explica\n",
+    Description = "auto feed pets\n",
     Values = {},
     Multi = false,
     Default = nil,
