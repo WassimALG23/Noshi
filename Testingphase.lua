@@ -3,8 +3,8 @@ local SaveManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/d
 local InterfaceManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/InterfaceManager.lua"))()
 
 local Window = Fluent:CreateWindow({
-    Title = "Script hub -by dead",
-    SubTitle = "Multi Game Executor",
+    Title = "Crab hub",
+    SubTitle = "A Script Hub",
     TabWidth = 160,
     Size = UDim2.fromOffset(580, 460),
     Acrylic = true,
@@ -13,7 +13,26 @@ local Window = Fluent:CreateWindow({
 })
 
 local main = Window:AddTab({ Title = "Main", Icon = "book" })
-main:AddParagraph({ Title = "Welcome", Content = "Made by dead" })
+main:AddParagraph({ Title = "welcome to CrabHub", Content = "more updates soon!" })
+main:AddButton({
+    Title = "Copy Discord server invite",
+    Callback = function()
+        if setclipboard then
+            setclipboard("https://discord.gg/Dan73jwkyX")
+            Fluent:Notify({
+                Title = "Copied!",
+                Content = "Discord invite link copied to clipboard.",
+                Duration = 3
+            })
+        else
+            Fluent:Notify({
+                Title = "Error",
+                Content = "Clipboard not supported in your executor.",
+                Duration = 3
+            })
+        end
+    end
+})
 
 --  Grow a Garden
 local grow = Window:AddTab({ Title = "Grow a Garden", Icon = "leaf" })
