@@ -329,26 +329,27 @@ local function GetRandomFarmPoint()
 end
 
 local function GetHarvestablePlants()
-    local character = LocalPlayer.Character
-    if not character then return {} end
+	local character = LocalPlayer.Character
+	if not character then return {} end
 
-    local root = GetMyFarm()
-    if not root then return {} end
+	local root = GetMyFarm()
+	if not root then return {} end
 
-    local plantFolder = root.Important:FindFirstChild("Plants_Physical")
-    if not plantFolder then return {} end
+	local plantFolder = root.Important:FindFirstChild("Plants_Physical")
+	if not plantFolder then return {} end
 
-    local pos = character:GetPivot().Position
-    local plants = {}
+	local plants = {}
 
-    for _, model in pairs(plantFolder:GetDescendants()) do
-    if model:IsA("ProximityPrompt") and model.Enabled then
-        print("Found harvestable prompt:", model.Name)
-        table.insert(plants, model.Parent.Parent)
-    end
-end
+	for _, model in pairs(plantFolder:GetDescendants()) do
+		if model:IsA("ProximityPrompt") and model.Enabled then
+			local plantModel = model:FindFirstAncestorWhichIsA("Model")
+			if plantModel then
+				table.insert(plants, plantModel)
+			end
+		end
+	end
 
-    return plants
+	return plants
 end
 
 local function HarvestPlants()
